@@ -30,10 +30,10 @@ Independientemente del tamano solicitado del laberinto, este sera desplegado com
 
 Todo el codigo debe estar escrito en C (no C++). Todas las interfaces deben ser graficas. Se debe usar GTK, Glade y Cairo. No debe dar “Segmentation Fault” bajo ninguna circunstancia.
 
-##Trabajos adicionales
+**Trabajos adicionales**
 - [ ] Hacer que el piso y las paredes del laberinto tengan alguna textura apropiada.
 - [ ] implemente adicionalmente laberintos donde la casilla basica es un hexagono en vez de un cuadrado.
 
 
-##TODO LIST
+**TODO LIST**
 - [ ] Placeholder miedo
