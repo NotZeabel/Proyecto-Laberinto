@@ -9,6 +9,8 @@ El programa tendra la posibilidad de grabar archivos con los datos particulares 
 
 
 Habra botones para las siguientes funciones:
+
+
 Generar: se abre una subventana que pedira la cantidad de filas y columnas del laberinto (pueden ser laberintos de hasta 2048 × 2048). Estos son campos que el usuario debe ingresar. El programa impedira el ingreso de cualquier entrada ilegal.
 
 
@@ -31,7 +33,7 @@ Todo el codigo debe estar escrito en C (no C++). Todas las interfaces deben ser 
 
 **Trabajos adicionales**
 - [ ] Hacer que el piso y las paredes del laberinto tengan alguna textura apropiada.
-- [ ] implemente adicionalmente laberintos donde la casilla basica es un hexagono en vez de un cuadrado.
+- [ ] Implemente adicionalmente laberintos donde la casilla basica es un hexagono en vez de un cuadrado.
 
 
 **TODO LIST**
