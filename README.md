@@ -1,6 +1,5 @@
 # Proyecto-Laberinto
-Para este
-proyecto usaremos un algoritmo descrito por David Matuszek. Los laberintos solamente seran generados, grabados o leídos para ser desplegados, pero no seran resueltos. La interfaz debe ser gráfica. Toda la programación debe realizarse en C sobre Linux.
+Para este proyecto usaremos un algoritmo descrito por David Matuszek. Los laberintos solamente seran generados, grabados o leídos para ser desplegados, pero no seran resueltos. La interfaz debe ser gráfica. Toda la programación debe realizarse en C sobre Linux.
 
 
 La interaccion con el usuario se hará por medio de interfaces graficas que deben ser desarrolladas con GTK y Glade. Ademas se debe usar Cairo para el despliegue del laberinto. La calidad estetica de la salida sera muy tomada en cuenta.
