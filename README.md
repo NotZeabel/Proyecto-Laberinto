@@ -37,4 +37,16 @@ Todo el codigo debe estar escrito en C (no C++). Todas las interfaces deben ser 
 
 
 **TODO LIST**
-- [ ] Placeholder miedo
+- [ ] Función Leer
+- [ ] Función Grabar
+- [ ] Botón Generar
+  - [ ] Subventana para tamaño (max 2048x2048)
+- [ ] Subventana de Botón Resolver
+- [ ] Cairo
+  - [ ] Dibujar Laberinto
+  - [ ] Zoom in/out (con mouse)
+  - [ ] Mover área visible (con mouse)
+- [ ] Lógica
+  - [ ] Matriz?
+  - [ ] Función generarLaberinto (algoritmo Matuszek)
+
