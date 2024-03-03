@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <gtk/gtk.h>
+#include <stdbool.h>
  
 gboolean redOn,amberOn,greenOn = TRUE;
 GtkWidget* window;
@@ -12,10 +13,10 @@ GtkWidget* window;
 #define FRONTERA -1
 #define NONE 0
 #define LABERINTO 1
-#define B_ARRIBA 0x0001
-#define B_DERECHA 0x0010
-#define B_ABAJO 0x0100
-#define B_IZQUIERDA 0x1000
+#define B_ARRIBA 0b0001
+#define B_DERECHA 0b0010
+#define B_ABAJO 0b0100
+#define B_IZQUIERDA 0b1000
 
 struct celda{
     int estado; 
@@ -59,6 +60,56 @@ int agregarFronteras(struct celda** laberinto, int r, int c, struct pos* fronter
     return size;
 }
 
+char direccionOpuesta(char direccion){
+    switch (direccion){
+     case B_ARRIBA:
+        return B_ABAJO;        
+    case B_ABAJO:
+        return B_ARRIBA;
+    case B_DERECHA:        
+        return B_IZQUIERDA;        
+    case B_IZQUIERDA:
+        return B_DERECHA;    
+     default:
+        return 0;
+     }    
+}
+
+bool eliminarBarrera(struct celda** laberinto, int row, int col, char direccion){
+     if(row<0 || col<0) return false;
+
+     int rowVecino, colVecino = 0;
+
+     switch (direccion){
+     case B_ARRIBA:
+        rowVecino = row;
+        colVecino = col-1;
+        break;
+    case B_ABAJO:
+        rowVecino = row;
+        colVecino = col+1;
+        break;
+    case B_DERECHA:
+        rowVecino = row+1;
+        colVecino = col;
+        break;
+    case B_IZQUIERDA:
+        rowVecino = row-1;
+        colVecino = col;
+        break;
+     default:
+        return false;
+    }
+
+    if(rowVecino<0 || colVecino<0) return false;
+    if(laberinto[rowVecino][colVecino].estado != LABERINTO) return false;
+    
+    laberinto[rowVecino][colVecino].barrera = laberinto[rowVecino][colVecino].barrera & direccionOpuesta(direccion);
+    laberinto[row][col].barrera = laberinto[row][col].barrera & direccion;
+
+    return true;
+}
+
 void generarLaberinto(struct celda** laberinto, int rows, int cols){
     //Inicializacion
     for(int i=0; i<rows; i++){
@@ -72,15 +123,32 @@ void generarLaberinto(struct celda** laberinto, int rows, int cols){
 
     struct pos fronteras[2/3*rows*cols]; 
     int fronterasSize = 0;
-
+    
     laberinto[0][0].estado = LABERINTO;
-
     fronterasSize = agregarFronteras(laberinto, 0, 0, fronteras, fronterasSize);
 
-    //TODO algoritmo
+    int r;
+    while(fronterasSize != 0){
+        //Escoger celda frontera random
+        r = rand()%fronterasSize;
+        int row = fronteras[r].row;
+        int col = fronteras[r].row;
 
+        //Eliminar frontera de lista
+        fronteras[r] = fronteras[fronterasSize-1];
+        fronterasSize--;
+        laberinto[row][col].estado = LABERINTO;
 
-
+        //Eliminar barrera aleatoria                    
+        char direccion[] = {B_ARRIBA, B_DERECHA, B_ABAJO, B_IZQUIERDA};         
+        int randDir = rand()%4;
+        while(!eliminarBarrera(laberinto, row, col, direccion[randDir])){
+            randDir = (randDir+1)%4;
+        }
+        
+        //Agregar nuevas fronteras
+        fronterasSize = agregarFronteras(laberinto, row, col, fronteras, fronterasSize);
+    }
 }
 
 
@@ -317,6 +385,7 @@ gboolean windowDelete(__attribute__((unused)) GtkWidget *widget,
 
 int main(int argc, char **argv)
 {
+    srand(time(NULL));
     GtkBuilder *builder;
     GError *error = NULL;
 

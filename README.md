@@ -50,8 +50,10 @@ Todo el codigo debe estar escrito en C (no C++). Todas las interfaces deben ser 
   - [x] Struct celda con estado y barrera
   - [x] Matriz de celdas
   - [x] Array de punteros a celdas frontera
-  - [ ] Función generarLaberinto (algoritmo Matuszek)
-    - [ ] Función eliminarBarrera
+  - [x] Función generarLaberinto (algoritmo Matuszek)
+    - [x] Función eliminarBarrera
     - [x] Función agregarFronteras
-    - [ ] Función eliminarFrontera
+    - [x] eliminar Frontera
+    - [x] Función direccionOpuesta
+  - [ ] Tested
 
