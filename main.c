@@ -8,19 +8,19 @@ GtkWidget* window;
 
 
 
-//================= Logica ==================
+//================= Logic ==================
 
-#define FRONTERA -1
+#define FRONTIER -1
 #define NONE 0
-#define LABERINTO 1
-#define B_ARRIBA 0b0001
-#define B_DERECHA 0b0010
-#define B_ABAJO 0b0100
-#define B_IZQUIERDA 0b1000
+#define LABYRINTH 1
+#define B_UPPER 0b0001
+#define B_RIGHT 0b0010
+#define B_LOWER 0b0100
+#define B_LEFT 0b1000
 
-struct celda{
-    int estado; 
-    char barrera;
+struct cell{
+    int state; 
+    char barrier;
 };
 
 struct pos{
@@ -31,123 +31,123 @@ struct pos{
 
 
 
-int agregarFronteras(struct celda** laberinto, int r, int c, struct pos* fronteras, int size){
-    if(laberinto[r+1][c].estado == NONE){
-        laberinto[r+1][c].estado = FRONTERA;
-        fronteras[size].row = r+1;
-        fronteras[size].col = c;
+int addFrontiers(struct cell** labyrinth, int r, int c, struct pos* frontiers, int size){
+    if(labyrinth[r+1][c].state == NONE){
+        labyrinth[r+1][c].state = FRONTIER;
+        frontiers[size].row = r+1;
+        frontiers[size].col = c;
         size++;
     } 
-    if(laberinto[r-1][c].estado == NONE){
-        laberinto[r-1][c].estado = FRONTERA;
-        fronteras[size].row = r-1;
-        fronteras[size].col = c;
+    if(labyrinth[r-1][c].state == NONE){
+        labyrinth[r-1][c].state = FRONTIER;
+        frontiers[size].row = r-1;
+        frontiers[size].col = c;
         size++;
     } 
-    if(laberinto[r][c+1].estado == NONE){
-        laberinto[r][c+1].estado = FRONTERA;
-        fronteras[size].row = r;
-        fronteras[size].col = c+1;
+    if(labyrinth[r][c+1].state == NONE){
+        labyrinth[r][c+1].state = FRONTIER;
+        frontiers[size].row = r;
+        frontiers[size].col = c+1;
         size++;
     } 
-    if(laberinto[r][c-1].estado == NONE){
-        laberinto[r][c-1].estado = FRONTERA;
-        fronteras[size].row = r;
-        fronteras[size].col = c-1;
+    if(labyrinth[r][c-1].state == NONE){
+        labyrinth[r][c-1].state = FRONTIER;
+        frontiers[size].row = r;
+        frontiers[size].col = c-1;
         size++;
     }     
 
     return size;
 }
 
-char direccionOpuesta(char direccion){
-    switch (direccion){
-     case B_ARRIBA:
-        return B_ABAJO;        
-    case B_ABAJO:
-        return B_ARRIBA;
-    case B_DERECHA:        
-        return B_IZQUIERDA;        
-    case B_IZQUIERDA:
-        return B_DERECHA;    
+char oppositeDirection(char direction){
+    switch (direction){
+     case B_UPPER:
+        return B_LOWER;        
+    case B_LOWER:
+        return B_UPPER;
+    case B_RIGHT:        
+        return B_LEFT;        
+    case B_LEFT:
+        return B_RIGHT;    
      default:
         return 0;
      }    
 }
 
-bool eliminarBarrera(struct celda** laberinto, int row, int col, char direccion){
+bool deleteBarrier(struct cell** labyrinth, int row, int col, char direction){
      if(row<0 || col<0) return false;
 
-     int rowVecino, colVecino = 0;
+     int neighborRow, neighborCol = 0;
 
-     switch (direccion){
-     case B_ARRIBA:
-        rowVecino = row;
-        colVecino = col-1;
+     switch (direction){
+     case B_UPPER:
+        neighborRow = row;
+        neighborCol = col-1;
         break;
-    case B_ABAJO:
-        rowVecino = row;
-        colVecino = col+1;
+    case B_LOWER:
+        neighborRow = row;
+        neighborCol = col+1;
         break;
-    case B_DERECHA:
-        rowVecino = row+1;
-        colVecino = col;
+    case B_RIGHT:
+        neighborRow = row+1;
+        neighborCol = col;
         break;
-    case B_IZQUIERDA:
-        rowVecino = row-1;
-        colVecino = col;
+    case B_LEFT:
+        neighborRow = row-1;
+        neighborCol = col;
         break;
      default:
         return false;
     }
 
-    if(rowVecino<0 || colVecino<0) return false;
-    if(laberinto[rowVecino][colVecino].estado != LABERINTO) return false;
+    if(neighborRow<0 || neighborCol<0) return false;
+    if(labyrinth[neighborRow][neighborCol].state != LABYRINTH) return false;
     
-    laberinto[rowVecino][colVecino].barrera = laberinto[rowVecino][colVecino].barrera & direccionOpuesta(direccion);
-    laberinto[row][col].barrera = laberinto[row][col].barrera & direccion;
+    labyrinth[neighborRow][neighborCol].barrier = labyrinth[neighborRow][neighborCol].barrier & oppositeDirection(direction);
+    labyrinth[row][col].barrier = labyrinth[row][col].barrier & direction;
 
     return true;
 }
 
-void generarLaberinto(struct celda** laberinto, int rows, int cols){
-    //Inicializacion
+void generateLabyrinth(struct cell** labyrinth, int rows, int cols){
+    //Initialization
     for(int i=0; i<rows; i++){
-        struct celda row[cols];                      //Talves hay que usar malloc    
+        struct cell row[cols];                      //Talves hay que usar malloc    
         for (int j = 0; j < cols; j++){
-            struct celda c = {NONE, 0};
+            struct cell c = {NONE, 0};
             row[j] = c;
         }
-        laberinto[i] = row;        
+        labyrinth[i] = row;        
     }
 
-    struct pos fronteras[2/3*rows*cols]; 
-    int fronterasSize = 0;
+    struct pos frontiers[2/3*rows*cols]; 
+    int frontiersSize = 0;
     
-    laberinto[0][0].estado = LABERINTO;
-    fronterasSize = agregarFronteras(laberinto, 0, 0, fronteras, fronterasSize);
+    labyrinth[0][0].state = LABYRINTH;
+    frontiersSize = addFrontiers(labyrinth, 0, 0, frontiers, frontiersSize);
 
     int r;
-    while(fronterasSize != 0){
-        //Escoger celda frontera random
-        r = rand()%fronterasSize;
-        int row = fronteras[r].row;
-        int col = fronteras[r].row;
+    while(frontiersSize != 0){
+        //Choose a random frontier cell
+        r = rand()%frontiersSize;
+        int row = frontiers[r].row;
+        int col = frontiers[r].row;
 
-        //Eliminar frontera de lista
-        fronteras[r] = fronteras[fronterasSize-1];
-        fronterasSize--;
-        laberinto[row][col].estado = LABERINTO;
+        //Delete frontier cell from array
+        frontiers[r] = frontiers[frontiersSize-1];
+        frontiersSize--;
+        labyrinth[row][col].state = LABYRINTH;
 
-        //Eliminar barrera aleatoria                    
-        char direccion[] = {B_ARRIBA, B_DERECHA, B_ABAJO, B_IZQUIERDA};         
+        //Delete random barrier                    
+        char direction[] = {B_UPPER, B_RIGHT, B_LOWER, B_LEFT};         
         int randDir = rand()%4;
-        while(!eliminarBarrera(laberinto, row, col, direccion[randDir])){
+        while(!deleteBarrier(labyrinth, row, col, direction[randDir])){
             randDir = (randDir+1)%4;
         }
         
-        //Agregar nuevas fronteras
-        fronterasSize = agregarFronteras(laberinto, row, col, fronteras, fronterasSize);
+        //Add new frontier
+        frontiersSize = addFrontiers(labyrinth, row, col, frontiers, frontiersSize);
     }
 }
 
