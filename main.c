@@ -122,21 +122,21 @@ void generateLabyrinth(struct cell** labyrinth, int rows, int cols){
     }
 
     struct pos frontiers[2/3*rows*cols]; 
-    int frontiersSize = 0;
+    int frontierSize = 0;
     
     labyrinth[0][0].state = LABYRINTH;
-    frontiersSize = addFrontiers(labyrinth, 0, 0, frontiers, frontiersSize);
+    frontierSize = addFrontiers(labyrinth, 0, 0, frontiers, frontierSize);
 
     int r;
-    while(frontiersSize != 0){
+    while(frontierSize != 0){
         //Choose a random frontier cell
-        r = rand()%frontiersSize;
+        r = rand()%frontierSize;
         int row = frontiers[r].row;
         int col = frontiers[r].row;
 
         //Delete frontier cell from array
-        frontiers[r] = frontiers[frontiersSize-1];
-        frontiersSize--;
+        frontiers[r] = frontiers[frontierSize-1];
+        frontierSize--;
         labyrinth[row][col].state = LABYRINTH;
 
         //Delete random barrier                    
@@ -147,7 +147,7 @@ void generateLabyrinth(struct cell** labyrinth, int rows, int cols){
         }
         
         //Add new frontier
-        frontiersSize = addFrontiers(labyrinth, row, col, frontiers, frontiersSize);
+        frontierSize = addFrontiers(labyrinth, row, col, frontiers, frontierSize);
     }
 }
 
