@@ -12,19 +12,51 @@ GtkWidget* window;
 #define FRONTERA -1
 #define NONE 0
 #define LABERINTO 1
+#define B_ARRIBA 0x0001
+#define B_DERECHA 0x0010
+#define B_ABAJO 0x0100
+#define B_IZQUIERDA 0x1000
 
 struct celda{
     int estado; 
     char barrera;
 };
 
+struct pos{
+    int row;
+    int col;
+};
 
 
-void agregarFronteras(struct celda** laberinto, int r, int c){
-    if(laberinto[r+1][c].estado != LABERINTO) laberinto[r+1][c].estado = FRONTERA;
-    if(laberinto[r-1][c].estado != LABERINTO) laberinto[r+1][c].estado = FRONTERA;
-    if(laberinto[r][c+1].estado != LABERINTO) laberinto[r+1][c].estado = FRONTERA;
-    if(laberinto[r][c-1].estado != LABERINTO) laberinto[r+1][c].estado = FRONTERA;
+
+
+int agregarFronteras(struct celda** laberinto, int r, int c, struct pos* fronteras, int size){
+    if(laberinto[r+1][c].estado == NONE){
+        laberinto[r+1][c].estado = FRONTERA;
+        fronteras[size].row = r+1;
+        fronteras[size].col = c;
+        size++;
+    } 
+    if(laberinto[r-1][c].estado == NONE){
+        laberinto[r-1][c].estado = FRONTERA;
+        fronteras[size].row = r-1;
+        fronteras[size].col = c;
+        size++;
+    } 
+    if(laberinto[r][c+1].estado == NONE){
+        laberinto[r][c+1].estado = FRONTERA;
+        fronteras[size].row = r;
+        fronteras[size].col = c+1;
+        size++;
+    } 
+    if(laberinto[r][c-1].estado == NONE){
+        laberinto[r][c-1].estado = FRONTERA;
+        fronteras[size].row = r;
+        fronteras[size].col = c-1;
+        size++;
+    }     
+
+    return size;
 }
 
 void generarLaberinto(struct celda** laberinto, int rows, int cols){
@@ -38,13 +70,16 @@ void generarLaberinto(struct celda** laberinto, int rows, int cols){
         laberinto[i] = row;        
     }
 
-    struct celda fronteras[2/3*rows*cols]; 
+    struct pos fronteras[2/3*rows*cols]; 
+    int fronterasSize = 0;
 
     laberinto[0][0].estado = LABERINTO;
 
-    agregarFronteras(laberinto, 0, 0);
+    fronterasSize = agregarFronteras(laberinto, 0, 0, fronteras, fronterasSize);
 
     //TODO algoritmo
+
+
 
 }
 
