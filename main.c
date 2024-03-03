@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <stdlib.h>
 #include <gtk/gtk.h>
 #include <stdbool.h>
@@ -23,42 +22,18 @@ struct celda{
     char barrera;
 };
 
+struct laberinto{
+    struct celda** matriz;
+    int rows;
+    int cols;
+};
+
 struct pos{
     int row;
     int col;
 };
 
 
-
-
-int agregarFronteras(struct celda** laberinto, int r, int c, struct pos* fronteras, int size){
-    if(laberinto[r+1][c].estado == NONE){
-        laberinto[r+1][c].estado = FRONTERA;
-        fronteras[size].row = r+1;
-        fronteras[size].col = c;
-        size++;
-    } 
-    if(laberinto[r-1][c].estado == NONE){
-        laberinto[r-1][c].estado = FRONTERA;
-        fronteras[size].row = r-1;
-        fronteras[size].col = c;
-        size++;
-    } 
-    if(laberinto[r][c+1].estado == NONE){
-        laberinto[r][c+1].estado = FRONTERA;
-        fronteras[size].row = r;
-        fronteras[size].col = c+1;
-        size++;
-    } 
-    if(laberinto[r][c-1].estado == NONE){
-        laberinto[r][c-1].estado = FRONTERA;
-        fronteras[size].row = r;
-        fronteras[size].col = c-1;
-        size++;
-    }     
-
-    return size;
-}
 
 char direccionOpuesta(char direccion){
     switch (direccion){
@@ -75,82 +50,171 @@ char direccionOpuesta(char direccion){
      }    
 }
 
-bool eliminarBarrera(struct celda** laberinto, int row, int col, char direccion){
-     if(row<0 || col<0) return false;
+bool tieneVecino(struct laberinto* lab, int row, int col, char direccion){
+    if(row<0 || col<0) return false;
 
      int rowVecino, colVecino = 0;
 
      switch (direccion){
      case B_ARRIBA:
-        rowVecino = row;
-        colVecino = col-1;
+        rowVecino = row-1;
+        colVecino = col;
         break;
     case B_ABAJO:
-        rowVecino = row;
-        colVecino = col+1;
-        break;
-    case B_DERECHA:
         rowVecino = row+1;
         colVecino = col;
         break;
+    case B_DERECHA:
+        rowVecino = row;
+        colVecino = col+1;
+        break;
     case B_IZQUIERDA:
-        rowVecino = row-1;
-        colVecino = col;
+        rowVecino = row;
+        colVecino = col-1;
         break;
      default:
         return false;
     }
 
-    if(rowVecino<0 || colVecino<0) return false;
-    if(laberinto[rowVecino][colVecino].estado != LABERINTO) return false;
-    
-    laberinto[rowVecino][colVecino].barrera = laberinto[rowVecino][colVecino].barrera & direccionOpuesta(direccion);
-    laberinto[row][col].barrera = laberinto[row][col].barrera & direccion;
+    if(rowVecino<0 || colVecino<0 || rowVecino >= lab->rows || col >= lab->cols) return false;
 
     return true;
 }
 
-void generarLaberinto(struct celda** laberinto, int rows, int cols){
-    //Inicializacion
-    for(int i=0; i<rows; i++){
-        struct celda row[cols];                      //Talves hay que usar malloc    
-        for (int j = 0; j < cols; j++){
-            struct celda c = {NONE, 0};
-            row[j] = c;
-        }
-        laberinto[i] = row;        
+struct pos posicionVecino(struct laberinto* lab, int row, int col, char direccion){
+     int rowVecino, colVecino = 0;
+
+     switch (direccion){
+     case B_ARRIBA:
+        rowVecino = row-1;
+        colVecino = col;
+        break;
+    case B_ABAJO:
+        rowVecino = row+1;
+        colVecino = col;
+        break;
+    case B_DERECHA:
+        rowVecino = row;
+        colVecino = col+1;
+        break;
+    case B_IZQUIERDA:
+        rowVecino = row;
+        colVecino = col-1;
+        break;
+    default:
     }
 
-    struct pos fronteras[2/3*rows*cols]; 
+    struct pos posicionVecino = {0, 0};
+
+    if(rowVecino<0 || colVecino<0 || rowVecino >= lab->rows || col >= lab->cols) return posicionVecino;
+
+    posicionVecino.row = rowVecino;
+    posicionVecino.col = colVecino;
+    return posicionVecino;
+}
+
+
+int agregarFronteras(struct laberinto* lab, int row, int col, struct pos* fronteras, int size){
+    char direccion[] = {B_ARRIBA, B_DERECHA, B_ABAJO, B_IZQUIERDA};
+
+    for(int i=0; i<4; i++){
+        if(!tieneVecino(lab, row, col, direccion[i])) continue;
+        
+        struct pos vecino = posicionVecino(lab, row, col, direccion[i]);
+
+        if(lab->matriz[vecino.row][vecino.col].estado == NONE){
+            lab->matriz[vecino.row][vecino.col].estado = FRONTERA;
+            fronteras[size].row = vecino.row;
+            fronteras[size].col = vecino.col;
+            size++;
+        } 
+    }
+
+    return size;
+}
+
+
+
+bool eliminarBarrera(struct laberinto* lab, int row, int col, char direccion){
+    if(row<0 || col<0 || row > lab->rows || col > lab->cols) return false;
+    if(!tieneVecino(lab, row, col, direccion)) return false;
+    
+    struct pos vecino = posicionVecino(lab, row, col, direccion);
+
+    if(lab->matriz[vecino.row][vecino.col].estado != LABERINTO) return false;
+    
+    lab->matriz[vecino.row][vecino.col].barrera = lab->matriz[vecino.row][vecino.col].barrera | direccionOpuesta(direccion);
+    lab->matriz[row][col].barrera = lab->matriz[row][col].barrera | direccion;
+    return true;
+}
+
+void generarLaberinto(struct laberinto* lab){
+    // //Inicializacion
+    // for(int i=0; i<lab->rows; i++){
+    //     struct celda row[lab->cols];                      //Talves hay que usar malloc    
+    //     for (int j = 0; j < lab->cols; j++){              //TODO: hay que inicializar esto aqui bien
+    //         struct celda c = {NONE, 0};
+    //         row[j] = c;
+    //     }
+    //     lab->matriz[i] = row;        
+    // }
+
+    struct pos fronteras[100];    //TODO tiene que usar malloc con 2/3*lab->rows*lab->cols 
     int fronterasSize = 0;
     
-    laberinto[0][0].estado = LABERINTO;
-    fronterasSize = agregarFronteras(laberinto, 0, 0, fronteras, fronterasSize);
+    lab->matriz[0][0].estado = LABERINTO;
+    fronterasSize = agregarFronteras(lab, 0, 0, fronteras, fronterasSize);
 
     int r;
     while(fronterasSize != 0){
         //Escoger celda frontera random
         r = rand()%fronterasSize;
         int row = fronteras[r].row;
-        int col = fronteras[r].row;
+        int col = fronteras[r].col;
 
         //Eliminar frontera de lista
         fronteras[r] = fronteras[fronterasSize-1];
         fronterasSize--;
-        laberinto[row][col].estado = LABERINTO;
+        lab->matriz[row][col].estado = LABERINTO;
 
         //Eliminar barrera aleatoria                    
         char direccion[] = {B_ARRIBA, B_DERECHA, B_ABAJO, B_IZQUIERDA};         
         int randDir = rand()%4;
-        while(!eliminarBarrera(laberinto, row, col, direccion[randDir])){
+        while(!eliminarBarrera(lab, row, col, direccion[randDir])){
             randDir = (randDir+1)%4;
         }
         
         //Agregar nuevas fronteras
-        fronterasSize = agregarFronteras(laberinto, row, col, fronteras, fronterasSize);
+        fronterasSize = agregarFronteras(lab, row, col, fronteras, fronterasSize);
     }
 }
 
+void printLaberinto(struct laberinto* laberinto){
+    for (int j = 0; j < laberinto->cols; j++){            
+        printf("XXXX");        
+    }
+    printf("XX\n");
+
+    for(int i=0; i<laberinto->rows; i++){
+        printf("XX");
+        for (int j = 0; j < laberinto->cols; j++){            
+            if((laberinto->matriz[i][j].barrera & B_DERECHA)>0){
+                printf("    ");
+            }else{
+                printf("  XX");
+            }
+        }
+        printf("\nXX");
+        for (int j = 0; j < laberinto->cols; j++){            
+            if((laberinto->matriz[i][j].barrera & B_ABAJO)>0){
+                printf("  XX");
+            }else{
+                printf("XXXX");
+            }
+        }
+        printf("\n");
+    }
+}
 
 
 
@@ -386,26 +450,46 @@ gboolean windowDelete(__attribute__((unused)) GtkWidget *widget,
 int main(int argc, char **argv)
 {
     srand(time(NULL));
-    GtkBuilder *builder;
-    GError *error = NULL;
+    // GtkBuilder *builder;
+    // GError *error = NULL;
 
-    gtk_init(&argc,&argv);
+    // gtk_init(&argc,&argv);
 
-    builder = gtk_builder_new ();
-    if( gtk_builder_add_from_file (builder,"gui.glade" ,&error) == 0)
-    {
-        printf("gtk_builder_add_from_file FAILED %s\n",error->message);
-        return EXIT_FAILURE;
+    // builder = gtk_builder_new ();
+    // if( gtk_builder_add_from_file (builder,"gui.glade" ,&error) == 0)
+    // {
+    //     printf("gtk_builder_add_from_file FAILED %s\n",error->message);
+    //     return EXIT_FAILURE;
+    // }
+
+    // window  = GTK_WIDGET (gtk_builder_get_object (builder,"window"));
+    // gtk_builder_connect_signals (builder, NULL);
+
+    // // Turn all the lights ON
+    // redOn = amberOn = greenOn = TRUE;
+    
+    // gtk_widget_show_all (window);
+    // gtk_main();
+
+
+    struct celda** matriz = (struct celda**)malloc(9 * sizeof(struct celda*));
+    
+
+    for (int i=0; i<9; i++){
+        matriz[i] = (struct celda*)malloc(9 * sizeof(struct celda));
     }
 
-    window  = GTK_WIDGET (gtk_builder_get_object (builder,"window"));
-    gtk_builder_connect_signals (builder, NULL);
+    //Inicializacion
+    for(int i=0; i<9; i++){                        //TODO: Hay que mover esto a generarLaberinto()
+        for (int j = 0; j < 9; j++){
+            struct celda c = {NONE, 0};
+            matriz[i][j] = c;
+        }         
+    }
 
-    // Turn all the lights ON
-    redOn = amberOn = greenOn = TRUE;
-    
-    gtk_widget_show_all (window);
-    gtk_main();
+    struct laberinto laberinto = {matriz, 9, 9};
+    generarLaberinto(&laberinto); 
+    printLaberinto(&laberinto);
 
     return EXIT_SUCCESS;
 }
