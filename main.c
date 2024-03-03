@@ -6,6 +6,70 @@ gboolean redOn,amberOn,greenOn = TRUE;
 GtkWidget* window;
 
 
+
+//================= Logica ==================
+
+#define FRONTERA -1
+#define NONE 0
+#define LABERINTO 1
+
+struct celda{
+    int estado; 
+    char barrera;
+};
+
+
+
+void agregarFronteras(struct celda** laberinto, int r, int c){
+    if(laberinto[r+1][c].estado != LABERINTO) laberinto[r+1][c].estado = FRONTERA;
+    if(laberinto[r-1][c].estado != LABERINTO) laberinto[r+1][c].estado = FRONTERA;
+    if(laberinto[r][c+1].estado != LABERINTO) laberinto[r+1][c].estado = FRONTERA;
+    if(laberinto[r][c-1].estado != LABERINTO) laberinto[r+1][c].estado = FRONTERA;
+}
+
+void generarLaberinto(struct celda** laberinto, int rows, int cols){
+    //Inicializacion
+    for(int i=0; i<rows; i++){
+        struct celda row[cols];                      //Talves hay que usar malloc    
+        for (int j = 0; j < cols; j++){
+            struct celda c = {NONE, 0};
+            row[j] = c;
+        }
+        laberinto[i] = row;        
+    }
+
+    struct celda fronteras[2/3*rows*cols]; 
+
+    laberinto[0][0].estado = LABERINTO;
+
+    agregarFronteras(laberinto, 0, 0);
+
+    //TODO algoritmo
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//================= Dibujo ==================
+
+
 //Taken from http://www.peteronion.org.uk/GtkExamples/GladeTutorials.html
 
 gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unused)) gpointer data)
