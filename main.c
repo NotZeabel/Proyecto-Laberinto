@@ -7,7 +7,7 @@ GtkWidget* window;
 
 
 
-//================= Logica ==================
+//================= Logic ==================
 
 #define FRONTIER -1
 #define NONE 0
@@ -167,24 +167,24 @@ void generateLabyrinth(struct maze* lab){
 
     int r;
     while(frontierSize != 0){
-        //Escoger cell frontera random
+        //Choose a random frontier cell
         r = rand()%frontierSize;
         int row = frontiers[r].row;
         int col = frontiers[r].col;
 
-        //Eliminar frontera de lista
+        //Delete frontier cell from array
         frontiers[r] = frontiers[frontierSize-1];
         frontierSize--;
         lab->matrix[row][col].state = LABYRINTH;
 
-        //Eliminar barrier aleatoria                    
+        //Delete random barrier                   
         char direction[] = {B_UPPER, B_RIGHT, B_LOWER, B_LEFT};         
         int randDir = rand()%4;
         while(!deleteBarrier(lab, row, col, direction[randDir])){
             randDir = (randDir+1)%4;
         }
         
-        //Agregar nuevas frontiers
+        //Add new frontier
         frontierSize = addFrontiers(lab, row, col, frontiers, frontierSize);
     }
 }
