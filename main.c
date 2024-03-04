@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <stdlib.h>
 #include <gtk/gtk.h>
 #include <stdbool.h>
@@ -8,7 +7,7 @@ GtkWidget* window;
 
 
 
-//================= Logic ==================
+//================= Logica ==================
 
 #define FRONTIER -1
 #define NONE 0
@@ -23,42 +22,18 @@ struct cell{
     char barrier;
 };
 
+struct maze{
+    struct cell** matrix;
+    int rows;
+    int cols;
+};
+
 struct pos{
     int row;
     int col;
 };
 
 
-
-
-int addFrontiers(struct cell** labyrinth, int r, int c, struct pos* frontiers, int size){
-    if(labyrinth[r+1][c].state == NONE){
-        labyrinth[r+1][c].state = FRONTIER;
-        frontiers[size].row = r+1;
-        frontiers[size].col = c;
-        size++;
-    } 
-    if(labyrinth[r-1][c].state == NONE){
-        labyrinth[r-1][c].state = FRONTIER;
-        frontiers[size].row = r-1;
-        frontiers[size].col = c;
-        size++;
-    } 
-    if(labyrinth[r][c+1].state == NONE){
-        labyrinth[r][c+1].state = FRONTIER;
-        frontiers[size].row = r;
-        frontiers[size].col = c+1;
-        size++;
-    } 
-    if(labyrinth[r][c-1].state == NONE){
-        labyrinth[r][c-1].state = FRONTIER;
-        frontiers[size].row = r;
-        frontiers[size].col = c-1;
-        size++;
-    }     
-
-    return size;
-}
 
 char oppositeDirection(char direction){
     switch (direction){
@@ -75,82 +50,171 @@ char oppositeDirection(char direction){
      }    
 }
 
-bool deleteBarrier(struct cell** labyrinth, int row, int col, char direction){
-     if(row<0 || col<0) return false;
+bool hasNeighbor(struct maze* lab, int row, int col, char direction){
+    if(row<0 || col<0) return false;
 
-     int neighborRow, neighborCol = 0;
+     int rowNeighbor, colNeighbor = 0;
 
      switch (direction){
      case B_UPPER:
-        neighborRow = row;
-        neighborCol = col-1;
+        rowNeighbor = row-1;
+        colNeighbor = col;
         break;
     case B_LOWER:
-        neighborRow = row;
-        neighborCol = col+1;
+        rowNeighbor = row+1;
+        colNeighbor = col;
         break;
     case B_RIGHT:
-        neighborRow = row+1;
-        neighborCol = col;
+        rowNeighbor = row;
+        colNeighbor = col+1;
         break;
     case B_LEFT:
-        neighborRow = row-1;
-        neighborCol = col;
+        rowNeighbor = row;
+        colNeighbor = col-1;
         break;
      default:
         return false;
     }
 
-    if(neighborRow<0 || neighborCol<0) return false;
-    if(labyrinth[neighborRow][neighborCol].state != LABYRINTH) return false;
-    
-    labyrinth[neighborRow][neighborCol].barrier = labyrinth[neighborRow][neighborCol].barrier & oppositeDirection(direction);
-    labyrinth[row][col].barrier = labyrinth[row][col].barrier & direction;
+    if(rowNeighbor<0 || colNeighbor<0 || rowNeighbor >= lab->rows || col >= lab->cols) return false;
 
     return true;
 }
 
-void generateLabyrinth(struct cell** labyrinth, int rows, int cols){
-    //Initialization
-    for(int i=0; i<rows; i++){
-        struct cell row[cols];                      //Talves hay que usar malloc    
-        for (int j = 0; j < cols; j++){
-            struct cell c = {NONE, 0};
-            row[j] = c;
-        }
-        labyrinth[i] = row;        
+struct pos neighborPosition(struct maze* lab, int row, int col, char direction){
+     int rowNeighbor, colNeighbor = 0;
+
+     switch (direction){
+     case B_UPPER:
+        rowNeighbor = row-1;
+        colNeighbor = col;
+        break;
+    case B_LOWER:
+        rowNeighbor = row+1;
+        colNeighbor = col;
+        break;
+    case B_RIGHT:
+        rowNeighbor = row;
+        colNeighbor = col+1;
+        break;
+    case B_LEFT:
+        rowNeighbor = row;
+        colNeighbor = col-1;
+        break;
+    default:
     }
 
-    struct pos frontiers[2/3*rows*cols]; 
+    struct pos neighborPosition = {0, 0};
+
+    if(rowNeighbor<0 || colNeighbor<0 || rowNeighbor >= lab->rows || col >= lab->cols) return neighborPosition;
+
+    neighborPosition.row = rowNeighbor;
+    neighborPosition.col = colNeighbor;
+    return neighborPosition;
+}
+
+
+int addFrontiers(struct maze* lab, int row, int col, struct pos* frontiers, int size){
+    char direction[] = {B_UPPER, B_RIGHT, B_LOWER, B_LEFT};
+
+    for(int i=0; i<4; i++){
+        if(!hasNeighbor(lab, row, col, direction[i])) continue;
+        
+        struct pos neighbor = neighborPosition(lab, row, col, direction[i]);
+
+        if(lab->matrix[neighbor.row][neighbor.col].state == NONE){
+            lab->matrix[neighbor.row][neighbor.col].state = FRONTIER;
+            frontiers[size].row = neighbor.row;
+            frontiers[size].col = neighbor.col;
+            size++;
+        } 
+    }
+
+    return size;
+}
+
+
+
+bool deleteBarrier(struct maze* lab, int row, int col, char direction){
+    if(row<0 || col<0 || row > lab->rows || col > lab->cols) return false;
+    if(!hasNeighbor(lab, row, col, direction)) return false;
+    
+    struct pos neighbor = neighborPosition(lab, row, col, direction);
+
+    if(lab->matrix[neighbor.row][neighbor.col].state != LABYRINTH) return false;
+    
+    lab->matrix[neighbor.row][neighbor.col].barrier = lab->matrix[neighbor.row][neighbor.col].barrier | oppositeDirection(direction);
+    lab->matrix[row][col].barrier = lab->matrix[row][col].barrier | direction;
+    return true;
+}
+
+void generateLabyrinth(struct maze* lab){
+    // //Inicializacion
+    // for(int i=0; i<lab->rows; i++){
+    //     struct cell row[lab->cols];                      //Talves hay que usar malloc    
+    //     for (int j = 0; j < lab->cols; j++){              //TODO: hay que inicializar esto aqui bien
+    //         struct cell c = {NONE, 0};
+    //         row[j] = c;
+    //     }
+    //     lab->matrix[i] = row;        
+    // }
+
+    struct pos frontiers[100];    //TODO tiene que usar malloc con 2/3*lab->rows*lab->cols 
     int frontierSize = 0;
     
-    labyrinth[0][0].state = LABYRINTH;
-    frontierSize = addFrontiers(labyrinth, 0, 0, frontiers, frontierSize);
+    lab->matrix[0][0].state = LABYRINTH;
+    frontierSize = addFrontiers(lab, 0, 0, frontiers, frontierSize);
 
     int r;
     while(frontierSize != 0){
-        //Choose a random frontier cell
+        //Escoger cell frontera random
         r = rand()%frontierSize;
         int row = frontiers[r].row;
-        int col = frontiers[r].row;
+        int col = frontiers[r].col;
 
-        //Delete frontier cell from array
+        //Eliminar frontera de lista
         frontiers[r] = frontiers[frontierSize-1];
         frontierSize--;
-        labyrinth[row][col].state = LABYRINTH;
+        lab->matrix[row][col].state = LABYRINTH;
 
-        //Delete random barrier                    
+        //Eliminar barrier aleatoria                    
         char direction[] = {B_UPPER, B_RIGHT, B_LOWER, B_LEFT};         
         int randDir = rand()%4;
-        while(!deleteBarrier(labyrinth, row, col, direction[randDir])){
+        while(!deleteBarrier(lab, row, col, direction[randDir])){
             randDir = (randDir+1)%4;
         }
         
-        //Add new frontier
-        frontierSize = addFrontiers(labyrinth, row, col, frontiers, frontierSize);
+        //Agregar nuevas frontiers
+        frontierSize = addFrontiers(lab, row, col, frontiers, frontierSize);
     }
 }
 
+void printLabyrinth(struct maze* lab){
+    for (int j = 0; j < lab->cols; j++){            
+        printf("XXXX");        
+    }
+    printf("XX\n");
+
+    for(int i=0; i<lab->rows; i++){
+        printf("XX");
+        for (int j = 0; j < lab->cols; j++){            
+            if((lab->matrix[i][j].barrier & B_RIGHT)>0){
+                printf("    ");
+            }else{
+                printf("  XX");
+            }
+        }
+        printf("\nXX");
+        for (int j = 0; j < lab->cols; j++){            
+            if((lab->matrix[i][j].barrier & B_LOWER)>0){
+                printf("  XX");
+            }else{
+                printf("XXXX");
+            }
+        }
+        printf("\n");
+    }
+}
 
 
 
@@ -386,26 +450,46 @@ gboolean windowDelete(__attribute__((unused)) GtkWidget *widget,
 int main(int argc, char **argv)
 {
     srand(time(NULL));
-    GtkBuilder *builder;
-    GError *error = NULL;
+    // GtkBuilder *builder;
+    // GError *error = NULL;
 
-    gtk_init(&argc,&argv);
+    // gtk_init(&argc,&argv);
 
-    builder = gtk_builder_new ();
-    if( gtk_builder_add_from_file (builder,"gui.glade" ,&error) == 0)
-    {
-        printf("gtk_builder_add_from_file FAILED %s\n",error->message);
-        return EXIT_FAILURE;
+    // builder = gtk_builder_new ();
+    // if( gtk_builder_add_from_file (builder,"gui.glade" ,&error) == 0)
+    // {
+    //     printf("gtk_builder_add_from_file FAILED %s\n",error->message);
+    //     return EXIT_FAILURE;
+    // }
+
+    // window  = GTK_WIDGET (gtk_builder_get_object (builder,"window"));
+    // gtk_builder_connect_signals (builder, NULL);
+
+    // // Turn all the lights ON
+    // redOn = amberOn = greenOn = TRUE;
+    
+    // gtk_widget_show_all (window);
+    // gtk_main();
+
+
+    struct cell** matrix = (struct cell**)malloc(9 * sizeof(struct cell*));
+    
+
+    for (int i=0; i<9; i++){
+        matrix[i] = (struct cell*)malloc(9 * sizeof(struct cell));
     }
 
-    window  = GTK_WIDGET (gtk_builder_get_object (builder,"window"));
-    gtk_builder_connect_signals (builder, NULL);
+    //Inicializacion
+    for(int i=0; i<9; i++){                        //TODO: Hay que mover esto a generateLabyrinth()
+        for (int j = 0; j < 9; j++){
+            struct cell c = {NONE, 0};
+            matrix[i][j] = c;
+        }         
+    }
 
-    // Turn all the lights ON
-    redOn = amberOn = greenOn = TRUE;
-    
-    gtk_widget_show_all (window);
-    gtk_main();
+    struct maze lab = {matrix, 9, 9};
+    generateLabyrinth(&lab); 
+    printLabyrinth(&lab);
 
     return EXIT_SUCCESS;
 }
