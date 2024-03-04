@@ -76,7 +76,7 @@ bool hasNeighbor(struct maze* lab, int row, int col, char direction){
         return false;
     }
 
-    if(rowNeighbor<0 || colNeighbor<0 || rowNeighbor >= lab->rows || col >= lab->cols) return false;
+    if(rowNeighbor<0 || colNeighbor<0 || rowNeighbor >= lab->rows || colNeighbor >= lab->cols) return false;
 
     return true;
 }
@@ -475,7 +475,7 @@ int main(int argc, char **argv)
 
 
 
-    struct maze lab = {NULL, 3, 3};
+    struct maze lab = {NULL, 12, 12};
     generateLabyrinth(&lab); 
     printLabyrinth(&lab);
 
