@@ -114,7 +114,7 @@ struct pos neighborPosition(struct maze* lab, int row, int col, char direction){
 }
 
 
-int add(struct maze* lab, int row, int col, struct pos* frontiers, int size){
+int addFrontiers(struct maze* lab, int row, int col, struct pos* frontiers, int size){
     char direction[] = {B_UPPER, B_RIGHT, B_LOWER, B_LEFT};
 
     for(int i=0; i<4; i++){
@@ -135,7 +135,7 @@ int add(struct maze* lab, int row, int col, struct pos* frontiers, int size){
 
 
 
-bool eliminarbarrier(struct maze* lab, int row, int col, char direction){
+bool deleteBarrier(struct maze* lab, int row, int col, char direction){
     if(row<0 || col<0 || row > lab->rows || col > lab->cols) return false;
     if(!hasNeighbor(lab, row, col, direction)) return false;
     
@@ -180,7 +180,7 @@ void generateLabyrinth(struct maze* lab){
         //Eliminar barrier aleatoria                    
         char direction[] = {B_UPPER, B_RIGHT, B_LOWER, B_LEFT};         
         int randDir = rand()%4;
-        while(!eliminarbarrier(lab, row, col, direction[randDir])){
+        while(!deleteBarrier(lab, row, col, direction[randDir])){
             randDir = (randDir+1)%4;
         }
         
