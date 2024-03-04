@@ -57,8 +57,6 @@ Todo el codigo debe estar escrito en C (no C++). Todas las interfaces deben ser 
     - [x] Función direccionOpuesta
     - [x] Función tieneVecino
     - [x] Función posicionVecino
-  - [x] Tested
-  - [ ] malloc arreglo fronteras
-  - [ ] acomodar inicializacion de matriz
+  - [x] Usar malloc
 
 

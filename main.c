@@ -149,17 +149,18 @@ bool deleteBarrier(struct maze* lab, int row, int col, char direction){
 }
 
 void generateLabyrinth(struct maze* lab){
-    // //Inicializacion
-    // for(int i=0; i<lab->rows; i++){
-    //     struct cell row[lab->cols];                      //Talves hay que usar malloc    
-    //     for (int j = 0; j < lab->cols; j++){              //TODO: hay que inicializar esto aqui bien
-    //         struct cell c = {NONE, 0};
-    //         row[j] = c;
-    //     }
-    //     lab->matrix[i] = row;        
-    // }
+    lab->matrix = (struct cell**)malloc(lab->rows * sizeof(struct cell*));        
+    for (int i=0; i<lab->rows; i++){
+        lab->matrix[i] = (struct cell*)malloc(lab->cols * sizeof(struct cell));
+    }
+    for(int i=0; i<lab->rows; i++){                        
+        for (int j = 0; j < lab->cols; j++){
+            struct cell c = {NONE, 0};
+            lab->matrix[i][j] = c;
+        }         
+    }
 
-    struct pos frontiers[100];    //TODO tiene que usar malloc con 2/3*lab->rows*lab->cols 
+    struct pos* frontiers = (struct pos*)malloc((2/3*lab->rows*lab->cols) * sizeof(struct pos));    //Algorithm's formula
     int frontierSize = 0;
     
     lab->matrix[0][0].state = LABYRINTH;
@@ -472,22 +473,9 @@ int main(int argc, char **argv)
     // gtk_main();
 
 
-    struct cell** matrix = (struct cell**)malloc(9 * sizeof(struct cell*));
-    
 
-    for (int i=0; i<9; i++){
-        matrix[i] = (struct cell*)malloc(9 * sizeof(struct cell));
-    }
 
-    //Inicializacion
-    for(int i=0; i<9; i++){                        //TODO: Hay que mover esto a generateLabyrinth()
-        for (int j = 0; j < 9; j++){
-            struct cell c = {NONE, 0};
-            matrix[i][j] = c;
-        }         
-    }
-
-    struct maze lab = {matrix, 9, 9};
+    struct maze lab = {NULL, 3, 3};
     generateLabyrinth(&lab); 
     printLabyrinth(&lab);
 
