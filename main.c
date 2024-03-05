@@ -33,8 +33,6 @@ struct pos{
     int col;
 };
 
-
-
 char oppositeDirection(char direction){
     switch (direction){
      case B_UPPER:
@@ -113,7 +111,6 @@ struct pos neighborPosition(struct maze* lab, int row, int col, char direction){
     return neighborPosition;
 }
 
-
 int addFrontiers(struct maze* lab, int row, int col, struct pos* frontiers, int size){
     char direction[] = {B_UPPER, B_RIGHT, B_LOWER, B_LEFT};
 
@@ -132,8 +129,6 @@ int addFrontiers(struct maze* lab, int row, int col, struct pos* frontiers, int 
 
     return size;
 }
-
-
 
 bool deleteBarrier(struct maze* lab, int row, int col, char direction){
     if(row<0 || col<0 || row > lab->rows || col > lab->cols) return false;
@@ -235,22 +230,80 @@ void printLabyrinth(struct maze* lab){
 
 
 
-//================= Dibujo ==================
+//================= Draw ==================
 
 
 //Taken from http://www.peteronion.org.uk/GtkExamples/GladeTutorials.html
 
-gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unused)) gpointer data)
-{
-    guint width, height;
-    double diameter;
+// gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unused)) gpointer data)
+// {
+//     guint width, height;
+//     double diameter;
 
-    // Get the size of the drawing area
-    width = gtk_widget_get_allocated_width (widget);
-    height = gtk_widget_get_allocated_height (widget);
+//     // Get the size of the drawing area
+//     width = gtk_widget_get_allocated_width (widget);
+//     height = gtk_widget_get_allocated_height (widget);
     
 
-    // Define points for drawing the regular trapezium for the white boarder
+//     // Define points for drawing the regular trapezium for the white boarder
+//     int borderPoints[][2] = {
+//         {10,10},{0,0},
+//         {width,0},{width-10,10},
+//         {width-10,height-10},{width,height},
+//         {0,height},{10,height-10},
+//         {10,10},{0,0},
+//     };
+    
+//     // Fill whole area to black
+//     cairo_set_source_rgba (cr, 0.0, 0.0, 0.0, 1.0);
+//     cairo_rectangle(cr,0,0,width,height);
+//     cairo_fill(cr);
+
+//     // Set fill colour to white
+//     cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 1.0);
+//     cairo_set_line_width(cr,1);
+    
+//     // Draw the white boarder with four regular trapeziums
+//     for(int start=0; start<=6; start+=2)
+//     {
+//         for(int n=start; n<=start+3; n++)
+//         {
+//             cairo_line_to(cr,borderPoints[n][0],borderPoints[n][1]);
+//         }
+        
+//         // Draw and fill the trapezium
+//         cairo_close_path(cr);
+//         cairo_stroke_preserve(cr);
+//         cairo_fill(cr);
+//     }
+
+//     // Draw Red circle
+//     diameter = (width < height/3) ? 0.35 * width : 0.35 * height / 3.0; 
+//     cairo_set_source_rgba (cr, redOn ? 1.0 : 0.5, 0.0, 0.0, 1.0);
+//     cairo_arc(cr, 0.5*width, 0.17*height, diameter, 0.0 ,2.0 * G_PI);
+//     cairo_fill(cr);
+
+//     // Draw Amber circle
+//     cairo_set_source_rgba (cr, amberOn ? 1.0 : 0.5, amberOn ? 1.0 : 0.5, 0.0, 1.0);
+//     cairo_arc(cr, 0.5*width, 0.5*height,diameter, 0.0, 2.0 * G_PI);
+//     cairo_fill(cr);
+
+//     // Draw Green circle
+//     cairo_set_source_rgba (cr, 0.0,greenOn ? 1.0 : 0.5, 0.0, 1.0);
+//     cairo_arc(cr, 0.5*width, 0.83*height, diameter, 0.0, 2.0 * G_PI);
+//     cairo_fill(cr);
+  
+//     return FALSE;
+// }
+
+gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unused)) gpointer data) {
+    //Initialize drawing area
+    //Taken from http://www.peteronion.org.uk/GtkExamples/GladeTutorials.html
+    guint width, height;
+
+    width = gtk_widget_get_allocated_width (widget);
+    height = gtk_widget_get_allocated_height (widget);
+
     int borderPoints[][2] = {
         {10,10},{0,0},
         {width,0},{width-10,10},
@@ -258,17 +311,17 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
         {0,height},{10,height-10},
         {10,10},{0,0},
     };
-    
-    // Fill whole area to black
+
+    // Make background a solid black color
     cairo_set_source_rgba (cr, 0.0, 0.0, 0.0, 1.0);
     cairo_rectangle(cr,0,0,width,height);
     cairo_fill(cr);
 
-    // Set fill colour to white
+    // Set fill color to white
     cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 1.0);
     cairo_set_line_width(cr,1);
     
-    // Draw the white boarder with four regular trapeziums
+    // Add white border
     for(int start=0; start<=6; start+=2)
     {
         for(int n=start; n<=start+3; n++)
@@ -276,28 +329,50 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
             cairo_line_to(cr,borderPoints[n][0],borderPoints[n][1]);
         }
         
-        // Draw and fill the trapezium
+        // Draw and fill the border
         cairo_close_path(cr);
         cairo_stroke_preserve(cr);
         cairo_fill(cr);
     }
 
-    // Draw Red circle
-    diameter = (width < height/3) ? 0.35 * width : 0.35 * height / 3.0; 
-    cairo_set_source_rgba (cr, redOn ? 1.0 : 0.5, 0.0, 0.0, 1.0);
-    cairo_arc(cr, 0.5*width, 0.17*height, diameter, 0.0 ,2.0 * G_PI);
-    cairo_fill(cr);
+    //Draw actual labyrinth
+    int cellHeight = height / lab->rows;
+    int cellWidth = width / lab->cols;
 
-    // Draw Amber circle
-    cairo_set_source_rgba (cr, amberOn ? 1.0 : 0.5, amberOn ? 1.0 : 0.5, 0.0, 1.0);
-    cairo_arc(cr, 0.5*width, 0.5*height,diameter, 0.0, 2.0 * G_PI);
-    cairo_fill(cr);
+    cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
+    for (int i = 0; i < lab->rows; i++) {
+        for (int j = 0; j < lab->cols; i++) {
+            int xCord = j + cellWidth;
+            int yCord = i + cellHeight;
 
-    // Draw Green circle
-    cairo_set_source_rgba (cr, 0.0,greenOn ? 1.0 : 0.5, 0.0, 1.0);
-    cairo_arc(cr, 0.5*width, 0.83*height, diameter, 0.0, 2.0 * G_PI);
-    cairo_fill(cr);
-  
+            if(!(lab->matrix[i][j].barrier & B_RIGHT) > 0) {
+                cairo_move_to(cr, xCord + cellWidth, yCord);
+                cairo_line_to(cr, xCord + cellWidth, yCord + cellHeight);
+            }
+
+            if(!((lab->matrix[i][j].barrier & B_LOWER) > 0)) {
+                cairo_move_to(cr, xCord, yCord + cellHeight);
+                cairo_line_to(cr, xCord + cellWidth, yCord + cellHeight);
+            }
+        }
+
+        // for (int j = 0; j < laby.cols; i++) {
+        //     int xCord = j + cellWidth;
+        //     int yCord = i + cellHeight;
+
+        //     if((laby.matrix[i][j].barrier & B_LOWER) > 0) {
+        //         cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
+        //         cairo_move_to(cr, xCord + cellWidth, yCord);
+        //         cairo_line_to(cr, xCord + cellWidth, yCord + cellHeight);
+        //     } else {
+        //         cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
+        //         cairo_move_to(cr, xCord + cellWidth, yCord);
+        //         cairo_line_to(cr, xCord + cellWidth, yCord + cellHeight);
+        //     }
+        // }
+    }
+    cairo_stroke(cr);
+
     return FALSE;
 }
 
@@ -375,8 +450,8 @@ void saveButton(GtkWidget *widget, __attribute__((unused)) gpointer   data) {
     chooser = GTK_FILE_CHOOSER (dialog);
 
     filter = gtk_file_filter_new ();
-    gtk_file_filter_add_pattern (filter, "*.sudoku");
-    gtk_file_filter_set_name (filter, "Sudoku files");
+    gtk_file_filter_add_pattern (filter, "*.maze");
+    gtk_file_filter_set_name (filter, "Maze files");
     gtk_file_chooser_add_filter (chooser, filter);
 
     gtk_file_chooser_set_do_overwrite_confirmation (chooser, TRUE);
@@ -389,8 +464,8 @@ void saveButton(GtkWidget *widget, __attribute__((unused)) gpointer   data) {
 
         filename = gtk_file_chooser_get_filename (chooser);
 
-        if (!g_str_has_suffix(filename, ".sudoku")) {
-            extendedFilename = g_strconcat(filename, ".sudoku", NULL);
+        if (!g_str_has_suffix(filename, ".maze")) {
+            extendedFilename = g_strconcat(filename, ".maze", NULL);
             g_free(filename);
             filename = extendedFilename;
         }
@@ -419,8 +494,8 @@ void loadButton(GtkWidget *widget, __attribute__((unused)) gpointer   data) {
                                         NULL);
 
     filter = gtk_file_filter_new ();
-    gtk_file_filter_add_pattern (filter, "*.sudoku");
-    gtk_file_filter_set_name (filter, "Sudoku files");
+    gtk_file_filter_add_pattern (filter, "*.maze");
+    gtk_file_filter_set_name (filter, "Maze files");
     gtk_file_chooser_add_filter (GTK_FILE_CHOOSER (dialog), filter);
                                         
     res = gtk_dialog_run (GTK_DIALOG (dialog));
@@ -451,29 +526,26 @@ gboolean windowDelete(__attribute__((unused)) GtkWidget *widget,
 int main(int argc, char **argv)
 {
     srand(time(NULL));
-    // GtkBuilder *builder;
-    // GError *error = NULL;
+    GtkBuilder *builder;
+    GError *error = NULL;
 
-    // gtk_init(&argc,&argv);
+    gtk_init(&argc,&argv);
 
-    // builder = gtk_builder_new ();
-    // if( gtk_builder_add_from_file (builder,"gui.glade" ,&error) == 0)
-    // {
-    //     printf("gtk_builder_add_from_file FAILED %s\n",error->message);
-    //     return EXIT_FAILURE;
-    // }
+    builder = gtk_builder_new ();
+    if( gtk_builder_add_from_file (builder,"gui.glade" ,&error) == 0)
+    {
+        printf("gtk_builder_add_from_file FAILED %s\n",error->message);
+        return EXIT_FAILURE;
+    }
 
-    // window  = GTK_WIDGET (gtk_builder_get_object (builder,"window"));
-    // gtk_builder_connect_signals (builder, NULL);
+    window  = GTK_WIDGET (gtk_builder_get_object (builder,"window"));
+    gtk_builder_connect_signals (builder, NULL);
 
-    // // Turn all the lights ON
-    // redOn = amberOn = greenOn = TRUE;
+    // Turn all the lights ON
+    redOn = amberOn = greenOn = TRUE;
     
-    // gtk_widget_show_all (window);
-    // gtk_main();
-
-
-
+    gtk_widget_show_all (window);
+    gtk_main();
 
     struct maze lab = {NULL, 12, 12};
     generateLabyrinth(&lab); 
