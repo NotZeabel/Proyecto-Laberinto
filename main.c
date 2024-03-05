@@ -345,7 +345,7 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
             int xCord = j + cellWidth;
             int yCord = i + cellHeight;
 
-            if(!(lab->matrix[i][j].barrier & B_RIGHT) > 0) {
+            if(!((lab->matrix[i][j].barrier & B_RIGHT) > 0)) {
                 cairo_move_to(cr, xCord + cellWidth, yCord);
                 cairo_line_to(cr, xCord + cellWidth, yCord + cellHeight);
             }
