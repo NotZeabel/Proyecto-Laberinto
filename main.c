@@ -33,7 +33,7 @@ struct pos{
     int col;
 };
 
-struct maze lab = {NULL, 50, 50};
+struct maze lab = {NULL, 4, 4};
 
 char oppositeDirection(char direction){
     switch (direction){
@@ -214,90 +214,7 @@ void printLabyrinth(struct maze* lab){
     }
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 //================= Draw ==================
-
-
-//Taken from http://www.peteronion.org.uk/GtkExamples/GladeTutorials.html
-
-// gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unused)) gpointer data)
-// {
-//     guint width, height;
-//     double diameter;
-
-//     // Get the size of the drawing area
-//     width = gtk_widget_get_allocated_width (widget);
-//     height = gtk_widget_get_allocated_height (widget);
-    
-
-//     // Define points for drawing the regular trapezium for the white boarder
-//     int borderPoints[][2] = {
-//         {10,10},{0,0},
-//         {width,0},{width-10,10},
-//         {width-10,height-10},{width,height},
-//         {0,height},{10,height-10},
-//         {10,10},{0,0},
-//     };
-    
-//     // Fill whole area to black
-//     cairo_set_source_rgba (cr, 0.0, 0.0, 0.0, 1.0);
-//     cairo_rectangle(cr,0,0,width,height);
-//     cairo_fill(cr);
-
-//     // Set fill colour to white
-//     cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 1.0);
-//     cairo_set_line_width(cr,1);
-    
-//     // Draw the white boarder with four regular trapeziums
-//     for(int start=0; start<=6; start+=2)
-//     {
-//         for(int n=start; n<=start+3; n++)
-//         {
-//             cairo_line_to(cr,borderPoints[n][0],borderPoints[n][1]);
-//         }
-        
-//         // Draw and fill the trapezium
-//         cairo_close_path(cr);
-//         cairo_stroke_preserve(cr);
-//         cairo_fill(cr);
-//     }
-
-//     // Draw Red circle
-//     diameter = (width < height/3) ? 0.35 * width : 0.35 * height / 3.0; 
-//     cairo_set_source_rgba (cr, redOn ? 1.0 : 0.5, 0.0, 0.0, 1.0);
-//     cairo_arc(cr, 0.5*width, 0.17*height, diameter, 0.0 ,2.0 * G_PI);
-//     cairo_fill(cr);
-
-//     // Draw Amber circle
-//     cairo_set_source_rgba (cr, amberOn ? 1.0 : 0.5, amberOn ? 1.0 : 0.5, 0.0, 1.0);
-//     cairo_arc(cr, 0.5*width, 0.5*height,diameter, 0.0, 2.0 * G_PI);
-//     cairo_fill(cr);
-
-//     // Draw Green circle
-//     cairo_set_source_rgba (cr, 0.0,greenOn ? 1.0 : 0.5, 0.0, 1.0);
-//     cairo_arc(cr, 0.5*width, 0.83*height, diameter, 0.0, 2.0 * G_PI);
-//     cairo_fill(cr);
-  
-//     return FALSE;
-// }
-
 gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unused)) gpointer data) {
     //Initialize drawing area
     //Taken from http://www.peteronion.org.uk/GtkExamples/GladeTutorials.html
