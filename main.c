@@ -33,6 +33,8 @@ struct pos{
     int col;
 };
 
+struct maze lab = {NULL, 50, 50};
+
 char oppositeDirection(char direction){
     switch (direction){
      case B_UPPER:
@@ -336,40 +338,28 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
     }
 
     //Draw actual labyrinth
-    int cellHeight = height / lab->rows;
-    int cellWidth = width / lab->cols;
+    int rows = lab.rows;
+    int cols = lab.cols;
+    int cellHeight = height / rows;
+    int cellWidth = width / cols;
 
+    cairo_set_line_width(cr,5);
     cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
-    for (int i = 0; i < lab->rows; i++) {
-        for (int j = 0; j < lab->cols; i++) {
-            int xCord = j + cellWidth;
-            int yCord = i + cellHeight;
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < cols; j++) {
+            int xCord = j * cellWidth;
+            int yCord = i * cellHeight;
 
-            if(!((lab->matrix[i][j].barrier & B_RIGHT) > 0)) {
+            if(!((lab.matrix[i][j].barrier & B_RIGHT) > 0)) {
                 cairo_move_to(cr, xCord + cellWidth, yCord);
                 cairo_line_to(cr, xCord + cellWidth, yCord + cellHeight);
             }
 
-            if(!((lab->matrix[i][j].barrier & B_LOWER) > 0)) {
+            if(!((lab.matrix[i][j].barrier & B_LOWER) > 0)) {
                 cairo_move_to(cr, xCord, yCord + cellHeight);
                 cairo_line_to(cr, xCord + cellWidth, yCord + cellHeight);
             }
         }
-
-        // for (int j = 0; j < laby.cols; i++) {
-        //     int xCord = j + cellWidth;
-        //     int yCord = i + cellHeight;
-
-        //     if((laby.matrix[i][j].barrier & B_LOWER) > 0) {
-        //         cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
-        //         cairo_move_to(cr, xCord + cellWidth, yCord);
-        //         cairo_line_to(cr, xCord + cellWidth, yCord + cellHeight);
-        //     } else {
-        //         cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
-        //         cairo_move_to(cr, xCord + cellWidth, yCord);
-        //         cairo_line_to(cr, xCord + cellWidth, yCord + cellHeight);
-        //     }
-        // }
     }
     cairo_stroke(cr);
 
@@ -531,6 +521,9 @@ int main(int argc, char **argv)
 
     gtk_init(&argc,&argv);
 
+    generateLabyrinth(&lab); 
+    printLabyrinth(&lab);
+
     builder = gtk_builder_new ();
     if( gtk_builder_add_from_file (builder,"gui.glade" ,&error) == 0)
     {
@@ -546,10 +539,6 @@ int main(int argc, char **argv)
     
     gtk_widget_show_all (window);
     gtk_main();
-
-    struct maze lab = {NULL, 12, 12};
-    generateLabyrinth(&lab); 
-    printLabyrinth(&lab);
 
     return EXIT_SUCCESS;
 }
