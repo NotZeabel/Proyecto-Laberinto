@@ -38,7 +38,7 @@ Todo el codigo debe estar escrito en C (no C++). Todas las interfaces deben ser 
 
 **TODO LIST**
 - [ ] Función Leer
-- [ ] Función Grabar
+- [x] Función Grabar
 - [ ] Botón Generar
   - [ ] Subventana para tamaño (max 2048x2048)
 - [ ] Subventana de Botón Resolver

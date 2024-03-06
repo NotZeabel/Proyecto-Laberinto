@@ -32,7 +32,7 @@ struct pos{
     int col;
 };
 
-struct maze lab = {NULL, 10, 10};
+struct maze lab = {NULL, 2, 2};
 
 char oppositeDirection(char direction){
     switch (direction){
@@ -288,23 +288,20 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
 void saveFile(char* path){
     FILE* file;
 
-    file = fopen(path, "w");
+    file = fopen(path, "wb");
 
-    // char data[81];
+    fwrite(&(lab.rows), sizeof(int), 1, file);
+    fwrite(&(lab.cols), sizeof(int), 1, file);
 
-    // for(int i=0; i<9; i++){
-    //     for(int j=0; j<9; j++){
-    //         data[i*9 +j] = readGridButton(i,j);
-    //     }
-    // }
-
-    // fprintf(file, "%s", data);
+    for(int i=0; i<lab.rows; i++){
+        fwrite(lab.matrix[i], sizeof(struct cell), lab.cols, file);
+    }    
     fclose(file); 
 }
 
 void loadFile(char* path){
     FILE* file;
-    file = fopen(path, "r");
+    file = fopen(path, "rb");
 
 
     if(file == NULL) {
