@@ -3,7 +3,7 @@
 #include <stdbool.h>
  
 GtkWidget* window;
-
+double zoomScale = 1.0;
 
 
 //================= Logic ==================
@@ -231,6 +231,13 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
     width = gtk_widget_get_allocated_width (widget);
     height = gtk_widget_get_allocated_height (widget);
 
+    double centerX = width / 2.0;
+    double centerY = height / 2.0;
+
+    cairo_translate(cr, centerX, centerY);
+    cairo_scale(cr, zoomScale, zoomScale);
+    cairo_translate(cr, -centerX, -centerY);
+
     int borderPoints[][2] = {
         {10,10},{0,0},
         {width,0},{width-10,10},
@@ -291,6 +298,19 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
     return FALSE;
 }
 
+//Zoom In/Out
+
+gboolean zoom(GtkWidget *widget, GdkEventScroll *event, gpointer data){
+    if (event->direction == GDK_SCROLL_UP) {
+        zoomScale *= 1.1;
+    } else if(event->direction == GDK_SCROLL_DOWN) {
+        zoomScale /= 1.1;
+    }
+
+    gtk_widget_queue_draw(widget);
+
+    return TRUE;
+}
 
 //Save & Load Functions
 
@@ -450,6 +470,7 @@ int main(int argc, char **argv)
     srand(time(NULL));
     GtkBuilder *builder;
     GError *error = NULL;
+    GtkWidget *drawArea;
 
     gtk_init(&argc,&argv);
 
@@ -465,6 +486,12 @@ int main(int argc, char **argv)
 
     window  = GTK_WIDGET (gtk_builder_get_object (builder,"window"));
     gtk_builder_connect_signals (builder, NULL);
+
+    drawArea = GTK_WIDGET(gtk_builder_get_object(builder, "labyrinthDrawingArea"));
+    g_signal_connect(G_OBJECT(drawArea), "draw", G_CALLBACK(on_drawingarea_draw), NULL);
+    g_signal_connect(G_OBJECT(drawArea), "scroll-event", G_CALLBACK(zoom), NULL);
+
+    gtk_widget_add_events(drawArea, GDK_SCROLL_MASK);
     
     gtk_widget_show_all (window);
     gtk_main();
