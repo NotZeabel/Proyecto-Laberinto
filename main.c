@@ -1,10 +1,10 @@
 #include <stdlib.h>
 #include <gtk/gtk.h>
 #include <stdbool.h>
+#include <math.h>
  
 GtkWidget* window;
 double zoomScale = 1.0;
-
 
 //================= Logic ==================
 
@@ -32,7 +32,7 @@ struct pos{
     int col;
 };
 
-struct maze lab = {NULL, 3, 3};
+struct maze lab = {NULL, 100, 100};
 
 char oppositeDirection(char direction){
     switch (direction){
@@ -275,7 +275,8 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
     int cellHeight = height / rows;
     int cellWidth = width / cols;
 
-    cairo_set_line_width(cr,5);
+    double strokeWidth = fmax(1.0 / zoomScale, 0.5);
+    cairo_set_line_width(cr,strokeWidth);
     cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
     for (int i = 0; i < rows; i++) {
         for (int j = 0; j < cols; j++) {
@@ -300,11 +301,18 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
 
 //Zoom In/Out
 
+double calculateMaxZoom() {
+    double maxZoom = fmin(1.0 * lab.cols, 1.0 * lab.rows);
+
+    return maxZoom;
+}
+
 gboolean zoom(GtkWidget *widget, GdkEventScroll *event, gpointer data){
+    double maxZoom = calculateMaxZoom();
     if (event->direction == GDK_SCROLL_UP) {
         zoomScale *= 1.1;
-        if (zoomScale > 2.7) {
-            zoomScale = 2.7;
+        if(zoomScale > maxZoom) {
+            zoomScale = maxZoom;
         }
     } else if(event->direction == GDK_SCROLL_DOWN) {
         zoomScale /= 1.1;

@@ -50,7 +50,8 @@
 				"-lgdk_pixbuf-2.0",
 				"-lgio-2.0",
 				"-lgobject-2.0",
-				"-lglib-2.0"
+				"-lglib-2.0",
+				"-lm"
 			],
 			"options": {
 				"cwd": "${fileDirname}"
