@@ -32,7 +32,7 @@ struct pos{
     int col;
 };
 
-struct maze lab = {NULL, 2, 2};
+struct maze lab = {NULL, 3, 3};
 
 char oppositeDirection(char direction){
     switch (direction){
@@ -156,7 +156,7 @@ void generateLabyrinth(struct maze* lab){
         }         
     }
 
-    struct pos* frontiers = (struct pos*)malloc((2/3*lab->rows*lab->cols) * sizeof(struct pos));    //Algorithm's formula
+    struct pos* frontiers = (struct pos*)malloc((2/3*lab->rows*lab->cols) * sizeof(struct pos));    //Algorithm's formula  //TODO: free this memory
     int frontierSize = 0;
     
     lab->matrix[0][0].state = LABYRINTH;
@@ -183,6 +183,15 @@ void generateLabyrinth(struct maze* lab){
         
         //Add new frontier
         frontierSize = addFrontiers(lab, row, col, frontiers, frontierSize);
+    }
+}
+
+void freeLabyrinth(struct maze* lab){
+    if(lab->matrix != NULL){
+        for(int i=0; i<lab->rows; i++){
+            if(lab->matrix[i] != NULL) free(lab->matrix[i]);             
+        }
+        free(lab->matrix);
     }
 }
 
@@ -316,19 +325,29 @@ void loadFile(char* path){
         return;
     }
 
-    // char data[81];
-    // fgets(data, 81, file);
+    //Free used memory
+    freeLabyrinth(&lab);
 
-    // for(int i=0; i<9; i++){
-    //     for(int j=0; j<9; j++){
-    //         if(data[i*9 +j]<'0' || data[i*9 +j]>'9'){
-    //             writeGridButton(' ', i, j);
-    //         }else{
-    //             writeGridButton(data[i*9 +j], i, j);
-    //         }
-            
-    //     }
-    // }
+    //Read rows and cols 
+    fread(&(lab.rows), sizeof(int), 1, file);
+    fread(&(lab.cols), sizeof(int), 1, file);
+
+    //Initialize new labyrinth
+    lab.matrix = (struct cell**)malloc(lab.rows * sizeof(struct cell*));        
+    for (int i=0; i<lab.rows; i++){
+        lab.matrix[i] = (struct cell*)malloc(lab.cols * sizeof(struct cell));
+    }
+    for(int i=0; i<lab.rows; i++){                        
+        for (int j = 0; j < lab.cols; j++){
+            struct cell c = {NONE, 0};
+            lab.matrix[i][j] = c;
+        }         
+    }
+
+    //Read matrix
+    for(int i=0; i<lab.rows; i++){
+        fread(lab.matrix[i], sizeof(struct cell), lab.cols, file);
+    }    
 
     fclose(file);   
 }
