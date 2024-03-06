@@ -303,8 +303,14 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
 gboolean zoom(GtkWidget *widget, GdkEventScroll *event, gpointer data){
     if (event->direction == GDK_SCROLL_UP) {
         zoomScale *= 1.1;
+        if (zoomScale > 2.7) {
+            zoomScale = 2.7;
+        }
     } else if(event->direction == GDK_SCROLL_DOWN) {
         zoomScale /= 1.1;
+        if(zoomScale < 1.0) {
+            zoomScale = 1.0;
+        }
     }
 
     gtk_widget_queue_draw(widget);
