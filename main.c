@@ -2,7 +2,6 @@
 #include <gtk/gtk.h>
 #include <stdbool.h>
  
-gboolean redOn,amberOn,greenOn = TRUE;
 GtkWidget* window;
 
 
@@ -33,7 +32,7 @@ struct pos{
     int col;
 };
 
-struct maze lab = {NULL, 4, 4};
+struct maze lab = {NULL, 10, 10};
 
 char oppositeDirection(char direction){
     switch (direction){
@@ -450,9 +449,6 @@ int main(int argc, char **argv)
 
     window  = GTK_WIDGET (gtk_builder_get_object (builder,"window"));
     gtk_builder_connect_signals (builder, NULL);
-
-    // Turn all the lights ON
-    redOn = amberOn = greenOn = TRUE;
     
     gtk_widget_show_all (window);
     gtk_main();
