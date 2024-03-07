@@ -4,8 +4,6 @@
  
 GtkWidget* window;
 
-
-
 //================= Logic ==================
 
 #define FRONTIER -1
@@ -33,6 +31,16 @@ struct pos{
 };
 
 struct maze lab = {NULL, 3, 3};
+
+
+void freeLabyrinth(struct maze* lab){
+    if(lab->matrix != NULL){
+        for(int i=0; i<lab->rows; i++){
+            if(lab->matrix[i] != NULL) free(lab->matrix[i]);             
+        }
+        free(lab->matrix);
+    }
+}
 
 char oppositeDirection(char direction){
     switch (direction){
@@ -186,14 +194,6 @@ void generateLabyrinth(struct maze* lab){
     }
 }
 
-void freeLabyrinth(struct maze* lab){
-    if(lab->matrix != NULL){
-        for(int i=0; i<lab->rows; i++){
-            if(lab->matrix[i] != NULL) free(lab->matrix[i]);             
-        }
-        free(lab->matrix);
-    }
-}
 
 void printLabyrinth(struct maze* lab){
     for (int j = 0; j < lab->cols; j++){            
@@ -293,7 +293,11 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
 
 
 
+
+
 //================= Save & Load ==================
+
+
 
 
 void saveFile(char* path){
@@ -354,23 +358,60 @@ void loadFile(char* path){
     fclose(file);   
 }
 
+
+
+
 //================= Button Events ==================
 //Taken from GTK API
 
+
+
+
+
+
 void generateButton(__attribute__((unused)) GtkWidget *widget, 
                        __attribute__((unused)) gpointer   data){
-        gtk_main_quit();
+    //Taken from https://stackoverflow.com/questions/48177396/signal-handlers-for-message-dialogs-in-gtk-using-glade-and-c
+    GtkWidget  *dialog;
+    GtkWidget  *rowsInput;
+    GtkWidget  *colsInput;
+    GtkBuilder *builder;
+
+    g_return_if_fail (window != NULL);
+
+    builder = gtk_builder_new_from_file("inputDialog.glade");
+
+    dialog = GTK_WIDGET(gtk_builder_get_object (builder, "inputDialog"));
+    gtk_window_set_transient_for (GTK_WINDOW(dialog), GTK_WINDOW(window));
+    rowsInput = GTK_WIDGET(gtk_builder_get_object (builder, "rowsInput"));
+    colsInput = GTK_WIDGET(gtk_builder_get_object (builder, "colsInput"));
+
+    gtk_widget_show_all(dialog);
+
+    int response = gtk_dialog_run(GTK_DIALOG(dialog));
+    const gchar* rowsText = gtk_entry_get_text(GTK_ENTRY(rowsInput));
+    const gchar* colsText = gtk_entry_get_text(GTK_ENTRY(colsInput));
+    
+    if(response == 1){
+        freeLabyrinth(&lab);
+        lab.rows = atoi(rowsText);
+        lab.cols = atoi(colsText);
+        generateLabyrinth(&lab);
+    }
+    
+    gtk_widget_destroy(dialog);
+    g_object_unref(G_OBJECT(builder));
 }
 
 void solveButton(__attribute__((unused)) GtkWidget *widget, 
                        __attribute__((unused)) gpointer   data){
-        GtkWidget *dialogWindow;
-        const gchar *message = "Not implemented";    
+    GtkWidget *dialogWindow;
+    const gchar *message = "Not implemented";    
 
-        dialogWindow = gtk_message_dialog_new(GTK_WINDOW(window), GTK_DIALOG_MODAL, GTK_MESSAGE_INFO, GTK_BUTTONS_OK, "%s", message);
+    dialogWindow = gtk_message_dialog_new(GTK_WINDOW(window), GTK_DIALOG_MODAL, GTK_MESSAGE_INFO, GTK_BUTTONS_OK, "%s", message);
 
-        gtk_dialog_run(GTK_DIALOG(dialogWindow));
-        gtk_widget_destroy(dialogWindow);
+    gtk_dialog_run(GTK_DIALOG(dialogWindow));
+    gtk_widget_destroy(dialogWindow);
 }
 
 void saveButton(GtkWidget *widget, __attribute__((unused)) gpointer   data) {
@@ -475,15 +516,14 @@ int main(int argc, char **argv)
     generateLabyrinth(&lab); 
     printLabyrinth(&lab);
 
-    builder = gtk_builder_new ();
-    if( gtk_builder_add_from_file (builder,"gui.glade" ,&error) == 0)
-    {
+    builder = gtk_builder_new();
+    if( gtk_builder_add_from_file (builder,"gui.glade" ,&error) == 0){
         printf("gtk_builder_add_from_file FAILED %s\n",error->message);
         return EXIT_FAILURE;
     }
-
     window  = GTK_WIDGET (gtk_builder_get_object (builder,"window"));
     gtk_builder_connect_signals (builder, NULL);
+
     
     gtk_widget_show_all (window);
     gtk_main();
