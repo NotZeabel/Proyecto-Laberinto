@@ -30,7 +30,7 @@ struct pos{
     int col;
 };
 
-struct maze lab = {NULL, 3, 3};
+struct maze lab = {NULL, 1, 1};
 
 
 void freeLabyrinth(struct maze* lab){
@@ -39,6 +39,33 @@ void freeLabyrinth(struct maze* lab){
             if(lab->matrix[i] != NULL) free(lab->matrix[i]);             
         }
         free(lab->matrix);
+    }    
+}
+
+void printLabyrinth(struct maze* lab){
+    for (int j = 0; j < lab->cols; j++){            
+        printf("XXXX");        
+    }
+    printf("XX\n");
+
+    for(int i=0; i<lab->rows; i++){
+        printf("XX");
+        for (int j = 0; j < lab->cols; j++){            
+            if((lab->matrix[i][j].barrier & B_RIGHT)>0){
+                printf("    ");
+            }else{
+                printf("  XX");
+            }
+        }
+        printf("\nXX");
+        for (int j = 0; j < lab->cols; j++){            
+            if((lab->matrix[i][j].barrier & B_LOWER)>0){
+                printf("  XX");
+            }else{
+                printf("XXXX");
+            }
+        }
+        printf("\n");
     }
 }
 
@@ -163,8 +190,11 @@ void generateLabyrinth(struct maze* lab){
             lab->matrix[i][j] = c;
         }         
     }
-
-    struct pos* frontiers = (struct pos*)malloc((2/3*lab->rows*lab->cols) * sizeof(struct pos));    //Algorithm's formula  //TODO: free this memory
+    
+    int size = ((lab->rows*lab->cols));
+    size = size * 2/3;
+    size = size * sizeof(struct pos);
+    struct pos* frontiers = (struct pos*)malloc(size);    //Algorithm's formula  
     int frontierSize = 0;
     
     lab->matrix[0][0].state = LABYRINTH;
@@ -192,37 +222,17 @@ void generateLabyrinth(struct maze* lab){
         //Add new frontier
         frontierSize = addFrontiers(lab, row, col, frontiers, frontierSize);
     }
+    free(frontiers);
+    printLabyrinth(lab);   //Remove in final version
 }
 
 
-void printLabyrinth(struct maze* lab){
-    for (int j = 0; j < lab->cols; j++){            
-        printf("XXXX");        
-    }
-    printf("XX\n");
 
-    for(int i=0; i<lab->rows; i++){
-        printf("XX");
-        for (int j = 0; j < lab->cols; j++){            
-            if((lab->matrix[i][j].barrier & B_RIGHT)>0){
-                printf("    ");
-            }else{
-                printf("  XX");
-            }
-        }
-        printf("\nXX");
-        for (int j = 0; j < lab->cols; j++){            
-            if((lab->matrix[i][j].barrier & B_LOWER)>0){
-                printf("  XX");
-            }else{
-                printf("XXXX");
-            }
-        }
-        printf("\n");
-    }
-}
 
 //================= Draw ==================
+
+
+
 gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unused)) gpointer data) {
     //Initialize drawing area
     //Taken from http://www.peteronion.org.uk/GtkExamples/GladeTutorials.html
@@ -395,12 +405,12 @@ void generateButton(__attribute__((unused)) GtkWidget *widget,
     if(response == 1){
         freeLabyrinth(&lab);
         lab.rows = atoi(rowsText);
-        lab.cols = atoi(colsText);
-        generateLabyrinth(&lab);
+        lab.cols = atoi(colsText);        
     }
     
     gtk_widget_destroy(dialog);
     g_object_unref(G_OBJECT(builder));
+    generateLabyrinth(&lab);
 }
 
 void solveButton(__attribute__((unused)) GtkWidget *widget, 
@@ -513,8 +523,6 @@ int main(int argc, char **argv)
 
     gtk_init(&argc,&argv);
 
-    generateLabyrinth(&lab); 
-    printLabyrinth(&lab);
 
     builder = gtk_builder_new();
     if( gtk_builder_add_from_file (builder,"gui.glade" ,&error) == 0){
@@ -524,7 +532,7 @@ int main(int argc, char **argv)
     window  = GTK_WIDGET (gtk_builder_get_object (builder,"window"));
     gtk_builder_connect_signals (builder, NULL);
 
-    
+    generateLabyrinth(&lab);    
     gtk_widget_show_all (window);
     gtk_main();
 
