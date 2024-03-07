@@ -86,6 +86,8 @@
               <object class="GtkEntry" id="rowsInput">
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
+                <property name="max-length">4</property>
+                <property name="input-purpose">number</property>
               </object>
               <packing>
                 <property name="x">115</property>
@@ -96,6 +98,8 @@
               <object class="GtkEntry" id="colsInput">
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
+                <property name="max-length">4</property>
+                <property name="input-purpose">number</property>
               </object>
               <packing>
                 <property name="x">115</property>

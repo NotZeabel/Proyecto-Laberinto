@@ -235,7 +235,7 @@ void generateLabyrinth(struct maze* lab){
 
 gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unused)) gpointer data) {
     //Initialize drawing area
-    //Taken from http://www.peteronion.org.uk/GtkExamples/GladeTutorials.html
+    //Taken from http://www.peteronion.org.uk/GtkExamples/GladeTutorials.html    
     guint width, height;
 
     width = gtk_widget_get_allocated_width (widget);
@@ -403,14 +403,24 @@ void generateButton(__attribute__((unused)) GtkWidget *widget,
     const gchar* colsText = gtk_entry_get_text(GTK_ENTRY(colsInput));
     
     if(response == 1){
-        freeLabyrinth(&lab);
-        lab.rows = atoi(rowsText);
-        lab.cols = atoi(colsText);        
+        int rows = atoi(rowsText);
+        int cols = atoi(colsText);    
+        if(0<rows && rows<=2048 && 0<cols && cols<=2048){
+            freeLabyrinth(&lab);
+            lab.rows = rows;
+            lab.cols = cols;
+            generateLabyrinth(&lab);    
+        }else{
+            GtkWidget *dialogWindow;
+            const gchar *message = "Error";    
+            dialogWindow = gtk_message_dialog_new(GTK_WINDOW(window), GTK_DIALOG_MODAL, GTK_MESSAGE_ERROR, GTK_BUTTONS_OK, "%s", message);
+            gtk_dialog_run(GTK_DIALOG(dialogWindow));
+            gtk_widget_destroy(dialogWindow);
+        }        
     }
     
     gtk_widget_destroy(dialog);
     g_object_unref(G_OBJECT(builder));
-    generateLabyrinth(&lab);
 }
 
 void solveButton(__attribute__((unused)) GtkWidget *widget, 
