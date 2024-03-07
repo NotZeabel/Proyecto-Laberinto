@@ -292,7 +292,9 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
 }
 
 
-//Save & Load Functions
+
+//================= Save & Load ==================
+
 
 void saveFile(char* path){
     FILE* file;
@@ -352,7 +354,24 @@ void loadFile(char* path){
     fclose(file);   
 }
 
-//From GTK API
+//================= Button Events ==================
+//Taken from GTK API
+
+void generateButton(__attribute__((unused)) GtkWidget *widget, 
+                       __attribute__((unused)) gpointer   data){
+        gtk_main_quit();
+}
+
+void solveButton(__attribute__((unused)) GtkWidget *widget, 
+                       __attribute__((unused)) gpointer   data){
+        GtkWidget *dialogWindow;
+        const gchar *message = "Not implemented";    
+
+        dialogWindow = gtk_message_dialog_new(GTK_WINDOW(window), GTK_DIALOG_MODAL, GTK_MESSAGE_INFO, GTK_BUTTONS_OK, "%s", message);
+
+        gtk_dialog_run(GTK_DIALOG(dialogWindow));
+        gtk_widget_destroy(dialogWindow);
+}
 
 void saveButton(GtkWidget *widget, __attribute__((unused)) gpointer   data) {
     GtkWidget *dialog;
