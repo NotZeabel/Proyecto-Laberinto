@@ -5,6 +5,9 @@
  
 GtkWidget* window;
 double zoomScale = 1.0;
+double maxZoom;
+gboolean dragging = FALSE;
+gdouble initialX, initialY, previousX, previousY, offsetX, offsetY = 0;
 
 //================= Logic ==================
 
@@ -32,7 +35,7 @@ struct pos{
     int col;
 };
 
-struct maze lab = {NULL, 100, 100};
+struct maze lab = {NULL, 50, 50};
 
 char oppositeDirection(char direction){
     switch (direction){
@@ -184,6 +187,8 @@ void generateLabyrinth(struct maze* lab){
         //Add new frontier
         frontierSize = addFrontiers(lab, row, col, frontiers, frontierSize);
     }
+
+    maxZoom = fmin(1.0 * lab->cols, 1.0 * lab->rows);
 }
 
 void freeLabyrinth(struct maze* lab){
@@ -237,6 +242,10 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
     cairo_translate(cr, centerX, centerY);
     cairo_scale(cr, zoomScale, zoomScale);
     cairo_translate(cr, -centerX, -centerY);
+
+    if(dragging) {
+        cairo_translate(cr, offsetX, offsetY);
+    }
 
     int borderPoints[][2] = {
         {10,10},{0,0},
@@ -301,14 +310,7 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
 
 //Zoom In/Out
 
-double calculateMaxZoom() {
-    double maxZoom = fmin(1.0 * lab.cols, 1.0 * lab.rows);
-
-    return maxZoom;
-}
-
 gboolean zoom(GtkWidget *widget, GdkEventScroll *event, gpointer data){
-    double maxZoom = calculateMaxZoom();
     if (event->direction == GDK_SCROLL_UP) {
         zoomScale *= 1.1;
         if(zoomScale > maxZoom) {
@@ -322,6 +324,47 @@ gboolean zoom(GtkWidget *widget, GdkEventScroll *event, gpointer data){
     }
 
     gtk_widget_queue_draw(widget);
+
+    return TRUE;
+}
+
+//Drag and move around
+gboolean buttonPressed(GtkWidget *widget, GdkEventButton *event, gpointer data) {
+    if(event->button == GDK_BUTTON_PRIMARY) {
+        dragging = TRUE;
+        initialX = event->x;
+        initialY = event->y;
+        previousX = initialX;
+        previousY = initialY;
+    }
+
+    return TRUE;
+}
+
+gboolean buttonReleased(GtkWidget *widget, GdkEventButton *event, gpointer data) {
+    if(event->button == GDK_BUTTON_PRIMARY) {
+        dragging = FALSE;
+    }
+
+    return TRUE;
+}
+
+gboolean motionNotify(GtkWidget *widget, GdkEventMotion *event, gpointer user_data) {
+    if(dragging) {
+        gdouble dirX = event->x - previousX;
+        gdouble dirY = event->y - previousY;
+
+        dirX /= zoomScale;
+        dirY /= zoomScale;
+
+        offsetX += dirX;
+        offsetY += dirY;
+
+        previousX = event->x;
+        previousY = event->y;
+
+        gtk_widget_queue_draw(widget);
+    } 
 
     return TRUE;
 }
@@ -504,8 +547,11 @@ int main(int argc, char **argv)
     drawArea = GTK_WIDGET(gtk_builder_get_object(builder, "labyrinthDrawingArea"));
     g_signal_connect(G_OBJECT(drawArea), "draw", G_CALLBACK(on_drawingarea_draw), NULL);
     g_signal_connect(G_OBJECT(drawArea), "scroll-event", G_CALLBACK(zoom), NULL);
+    g_signal_connect(G_OBJECT(drawArea), "button-press-event", G_CALLBACK(buttonPressed), NULL);
+    g_signal_connect(G_OBJECT(drawArea), "button-release-event", G_CALLBACK(buttonReleased), NULL);
+    g_signal_connect(G_OBJECT(drawArea), "motion-notify-event", G_CALLBACK(motionNotify), NULL);
 
-    gtk_widget_add_events(drawArea, GDK_SCROLL_MASK);
+    gtk_widget_add_events(drawArea, GDK_SCROLL_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK | GDK_POINTER_MOTION_MASK);
     
     gtk_widget_show_all (window);
     gtk_main();
