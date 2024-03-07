@@ -58,5 +58,5 @@ Todo el codigo debe estar escrito en C (no C++). Todas las interfaces deben ser 
     - [x] Función tieneVecino
     - [x] Función posicionVecino
   - [x] Usar malloc
-
-
+- [ ] Liberar memoria
+- [ ] Agrandar interfaz
