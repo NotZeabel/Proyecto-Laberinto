@@ -225,7 +225,7 @@ void generateLabyrinth(struct maze* lab){
         frontierSize = addFrontiers(lab, row, col, frontiers, frontierSize);
     }
     free(frontiers);
-    printLabyrinth(lab);   //Remove in final version
+    //printLabyrinth(lab);   //Remove in final version
 }
 
 
@@ -585,6 +585,7 @@ int main(int argc, char **argv)
 
     gtk_widget_add_events(drawArea, GDK_SCROLL_MASK);
     
+    generateLabyrinth(&lab);
     gtk_widget_show_all (window);
     gtk_main();
 
