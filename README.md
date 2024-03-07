@@ -44,7 +44,7 @@ Todo el codigo debe estar escrito en C (no C++). Todas las interfaces deben ser 
 - [ ] Subventana de Botón Resolver
 - [ ] Cairo
   - [x] Dibujar Laberinto
-  - [ ] Zoom in/out (con mouse)
+  - [x] Zoom in/out (con mouse)
   - [ ] Mover área visible (con mouse)
 - [ ] Lógica
   - [x] Struct celda con estado y barrera
