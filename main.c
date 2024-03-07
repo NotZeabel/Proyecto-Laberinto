@@ -32,7 +32,44 @@ struct pos{
     int col;
 };
 
-struct maze lab = {NULL, 100, 100};
+struct maze lab = {NULL, 1, 1};
+
+
+void freeLabyrinth(struct maze* lab){
+    if(lab->matrix != NULL){
+        for(int i=0; i<lab->rows; i++){
+            if(lab->matrix[i] != NULL) free(lab->matrix[i]);             
+        }
+        free(lab->matrix);
+    }    
+}
+
+void printLabyrinth(struct maze* lab){
+    for (int j = 0; j < lab->cols; j++){            
+        printf("XXXX");        
+    }
+    printf("XX\n");
+
+    for(int i=0; i<lab->rows; i++){
+        printf("XX");
+        for (int j = 0; j < lab->cols; j++){            
+            if((lab->matrix[i][j].barrier & B_RIGHT)>0){
+                printf("    ");
+            }else{
+                printf("  XX");
+            }
+        }
+        printf("\nXX");
+        for (int j = 0; j < lab->cols; j++){            
+            if((lab->matrix[i][j].barrier & B_LOWER)>0){
+                printf("  XX");
+            }else{
+                printf("XXXX");
+            }
+        }
+        printf("\n");
+    }
+}
 
 char oppositeDirection(char direction){
     switch (direction){
@@ -155,8 +192,11 @@ void generateLabyrinth(struct maze* lab){
             lab->matrix[i][j] = c;
         }         
     }
-
-    struct pos* frontiers = (struct pos*)malloc((2/3*lab->rows*lab->cols) * sizeof(struct pos));    //Algorithm's formula  //TODO: free this memory
+    
+    int size = ((lab->rows*lab->cols));
+    size = size * 2/3;
+    size = size * sizeof(struct pos);
+    struct pos* frontiers = (struct pos*)malloc(size);    //Algorithm's formula  
     int frontierSize = 0;
     
     lab->matrix[0][0].state = LABYRINTH;
@@ -184,48 +224,20 @@ void generateLabyrinth(struct maze* lab){
         //Add new frontier
         frontierSize = addFrontiers(lab, row, col, frontiers, frontierSize);
     }
+    free(frontiers);
+    printLabyrinth(lab);   //Remove in final version
 }
 
-void freeLabyrinth(struct maze* lab){
-    if(lab->matrix != NULL){
-        for(int i=0; i<lab->rows; i++){
-            if(lab->matrix[i] != NULL) free(lab->matrix[i]);             
-        }
-        free(lab->matrix);
-    }
-}
 
-void printLabyrinth(struct maze* lab){
-    for (int j = 0; j < lab->cols; j++){            
-        printf("XXXX");        
-    }
-    printf("XX\n");
 
-    for(int i=0; i<lab->rows; i++){
-        printf("XX");
-        for (int j = 0; j < lab->cols; j++){            
-            if((lab->matrix[i][j].barrier & B_RIGHT)>0){
-                printf("    ");
-            }else{
-                printf("  XX");
-            }
-        }
-        printf("\nXX");
-        for (int j = 0; j < lab->cols; j++){            
-            if((lab->matrix[i][j].barrier & B_LOWER)>0){
-                printf("  XX");
-            }else{
-                printf("XXXX");
-            }
-        }
-        printf("\n");
-    }
-}
 
 //================= Draw ==================
+
+
+
 gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unused)) gpointer data) {
     //Initialize drawing area
-    //Taken from http://www.peteronion.org.uk/GtkExamples/GladeTutorials.html
+    //Taken from http://www.peteronion.org.uk/GtkExamples/GladeTutorials.html    
     guint width, height;
 
     width = gtk_widget_get_allocated_width (widget);
@@ -326,7 +338,13 @@ gboolean zoom(GtkWidget *widget, GdkEventScroll *event, gpointer data){
     return TRUE;
 }
 
-//Save & Load Functions
+
+
+
+//================= Save & Load ==================
+
+
+
 
 void saveFile(char* path){
     FILE* file;
@@ -386,7 +404,71 @@ void loadFile(char* path){
     fclose(file);   
 }
 
-//From GTK API
+
+
+
+//================= Button Events ==================
+//Taken from GTK API
+
+
+
+
+
+
+void generateButton(__attribute__((unused)) GtkWidget *widget, 
+                       __attribute__((unused)) gpointer   data){
+    //Taken from https://stackoverflow.com/questions/48177396/signal-handlers-for-message-dialogs-in-gtk-using-glade-and-c
+    GtkWidget  *dialog;
+    GtkWidget  *rowsInput;
+    GtkWidget  *colsInput;
+    GtkBuilder *builder;
+
+    g_return_if_fail (window != NULL);
+
+    builder = gtk_builder_new_from_file("inputDialog.glade");
+
+    dialog = GTK_WIDGET(gtk_builder_get_object (builder, "inputDialog"));
+    gtk_window_set_transient_for (GTK_WINDOW(dialog), GTK_WINDOW(window));
+    rowsInput = GTK_WIDGET(gtk_builder_get_object (builder, "rowsInput"));
+    colsInput = GTK_WIDGET(gtk_builder_get_object (builder, "colsInput"));
+
+    gtk_widget_show_all(dialog);
+
+    int response = gtk_dialog_run(GTK_DIALOG(dialog));
+    const gchar* rowsText = gtk_entry_get_text(GTK_ENTRY(rowsInput));
+    const gchar* colsText = gtk_entry_get_text(GTK_ENTRY(colsInput));
+    
+    if(response == 1){
+        int rows = atoi(rowsText);
+        int cols = atoi(colsText);    
+        if(0<rows && rows<=2048 && 0<cols && cols<=2048){
+            freeLabyrinth(&lab);
+            lab.rows = rows;
+            lab.cols = cols;
+            generateLabyrinth(&lab);    
+        }else{
+            GtkWidget *dialogWindow;
+            const gchar *message = "Error";    
+            dialogWindow = gtk_message_dialog_new(GTK_WINDOW(window), GTK_DIALOG_MODAL, GTK_MESSAGE_ERROR, GTK_BUTTONS_OK, "%s", message);
+            gtk_dialog_run(GTK_DIALOG(dialogWindow));
+            gtk_widget_destroy(dialogWindow);
+        }        
+    }
+    
+    gtk_widget_destroy(dialog);
+    g_object_unref(G_OBJECT(builder));
+}
+
+void solveButton(__attribute__((unused)) GtkWidget *widget, 
+                       __attribute__((unused)) gpointer   data){
+    GtkWidget *dialogWindow;
+    const gchar *message = "Not implemented";    
+
+    dialogWindow = gtk_message_dialog_new(GTK_WINDOW(window), GTK_DIALOG_MODAL, GTK_MESSAGE_INFO, GTK_BUTTONS_OK, "%s", message);
+
+    gtk_dialog_run(GTK_DIALOG(dialogWindow));
+    gtk_widget_destroy(dialogWindow);
+}
 
 void saveButton(GtkWidget *widget, __attribute__((unused)) gpointer   data) {
     GtkWidget *dialog;
@@ -488,16 +570,12 @@ int main(int argc, char **argv)
 
     gtk_init(&argc,&argv);
 
-    generateLabyrinth(&lab); 
-    printLabyrinth(&lab);
 
-    builder = gtk_builder_new ();
-    if( gtk_builder_add_from_file (builder,"gui.glade" ,&error) == 0)
-    {
+    builder = gtk_builder_new();
+    if( gtk_builder_add_from_file (builder,"gui.glade" ,&error) == 0){
         printf("gtk_builder_add_from_file FAILED %s\n",error->message);
         return EXIT_FAILURE;
     }
-
     window  = GTK_WIDGET (gtk_builder_get_object (builder,"window"));
     gtk_builder_connect_signals (builder, NULL);
 
