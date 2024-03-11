@@ -248,8 +248,8 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
     width = gtk_widget_get_allocated_width (widget);
     height = gtk_widget_get_allocated_height (widget);
 
-    double centerX = width / 2.0;
-    double centerY = height / 2.0;
+    double centerX = (width / 2.0) - offsetX;
+    double centerY = (height / 2.0) - offsetY;
 
     cairo_translate(cr, centerX, centerY);
     cairo_scale(cr, zoomScale, zoomScale);
@@ -363,11 +363,16 @@ gboolean buttonReleased(GtkWidget *widget, GdkEventButton *event, gpointer data)
 
 gboolean motionNotify(GtkWidget *widget, GdkEventMotion *event, gpointer user_data) {
     if(dragging) {
-        gdouble dirX = event->x - previousX;
-        gdouble dirY = event->y - previousY;
+        double sensitivity;
 
-        dirX /= zoomScale;
-        dirY /= zoomScale;
+        if (zoomScale >= 1.0 && zoomScale <= 1.5) {
+            sensitivity = 1.0 / zoomScale;
+        } else {
+            sensitivity = 1.0 / (zoomScale * 2.1);
+        }
+
+        gdouble dirX = (event->x - previousX) * sensitivity;
+        gdouble dirY = (event->y - previousY) * sensitivity;
 
         offsetX += dirX;
         offsetY += dirY;
