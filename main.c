@@ -296,6 +296,9 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
     int cellHeight = height / rows;
     int cellWidth = width / cols;
 
+    if(cellHeight ==  0) cellHeight=1;
+    if(cellWidth ==  0) cellWidth=1;
+
     double strokeWidth = fmax(1.0 / zoomScale, 0.5);
     cairo_set_line_width(cr,strokeWidth);
     cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
