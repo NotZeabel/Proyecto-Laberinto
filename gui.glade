@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.40.0 -->
+<!-- Generated with glade 3.38.2 -->
 <interface>
   <requires lib="gtk+" version="3.24"/>
   <object class="GtkWindow" id="window">
@@ -16,6 +16,15 @@
         <property name="margin-end">10</property>
         <property name="margin-top">10</property>
         <property name="margin-bottom">10</property>
+        <child>
+          <object class="GtkDrawingArea" id="labyrinthDrawingArea">
+            <property name="width-request">400</property>
+            <property name="height-request">400</property>
+            <property name="visible">True</property>
+            <property name="can-focus">False</property>
+            <signal name="draw" handler="on_drawingarea_draw" swapped="no"/>
+          </object>
+        </child>
         <child>
           <object class="GtkBox">
             <property name="width-request">100</property>
@@ -109,15 +118,6 @@
             <property name="x">402</property>
             <property name="y">27</property>
           </packing>
-        </child>
-        <child>
-          <object class="GtkDrawingArea" id="labyrinthDrawingArea">
-            <property name="width-request">400</property>
-            <property name="height-request">400</property>
-            <property name="visible">True</property>
-            <property name="can-focus">False</property>
-            <signal name="draw" handler="on_drawingarea_draw" swapped="no"/>
-          </object>
         </child>
       </object>
     </child>
