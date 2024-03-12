@@ -402,6 +402,9 @@ void saveFile(char* path){
     for(int i=0; i<lab.rows; i++){
         fwrite(lab.matrix[i], sizeof(struct cell), lab.cols, file);
     }    
+    
+    fwrite(&maxZoom, sizeof(double), 1, file);
+
     fclose(file); 
 }
 
@@ -445,6 +448,9 @@ void loadFile(char* path){
     for(int i=0; i<lab.rows; i++){
         fread(lab.matrix[i], sizeof(struct cell), lab.cols, file);
     }    
+
+    //Read max Zoom
+    fread(&maxZoom, sizeof(double), 1, file);
 
     fclose(file);   
 }
