@@ -4,12 +4,13 @@
 #include <math.h>
  
 GtkWidget* window;
+GtkWidget* saveWidget;
 double zoomScale = 1.0;
 double maxZoom;
 gboolean dragging = FALSE;
 gdouble initialX, initialY, previousX, previousY, offsetX, offsetY = 0;
 
-//================= Logic ==================
+//================= LOGIC ==================
 
 #define FRONTIER -1
 #define NONE 0
@@ -236,7 +237,7 @@ void generateLabyrinth(struct maze* lab){
 
 
 
-//================= Draw ==================
+//================= DRAW ==================
 
 
 
@@ -389,7 +390,16 @@ gboolean motionNotify(GtkWidget *widget, GdkEventMotion *event, gpointer user_da
     return TRUE;
 }
 
-//Save & Load Functions
+
+
+
+
+//================= SAVE & LOAD FUNCTIONS ==================
+
+
+void enableSave() {
+    gtk_widget_set_sensitive(saveWidget, TRUE);
+}
 
 void saveFile(char* path){
     FILE* file;
@@ -450,17 +460,15 @@ void loadFile(char* path){
     //Calc Max Zoom
     maxZoom = fmin(1.0 * lab.cols, 1.0 * lab.rows);
     
+    enableSave();
     fclose(file);   
 }
 
 
 
 
-//================= Button Events ==================
+//================= BUTTON EVENTS ==================
 //Taken from GTK API
-
-
-
 
 
 
@@ -495,6 +503,7 @@ void generateButton(__attribute__((unused)) GtkWidget *widget,
             lab.rows = rows;
             lab.cols = cols;
             generateLabyrinth(&lab);    
+            enableSave();
         }else{
             GtkWidget *dialogWindow;
             const gchar *message = "Error. Input must be a number between 0 and 2048.";    
@@ -610,6 +619,11 @@ gboolean windowDelete(__attribute__((unused)) GtkWidget *widget,
     return FALSE;
 }
 
+
+
+
+//================= MAIN ==================
+
 int main(int argc, char **argv)
 {
     srand(time(NULL));
@@ -625,7 +639,9 @@ int main(int argc, char **argv)
         printf("gtk_builder_add_from_file FAILED %s\n",error->message);
         return EXIT_FAILURE;
     }
+    
     window  = GTK_WIDGET (gtk_builder_get_object (builder,"window"));
+    saveWidget  = GTK_WIDGET (gtk_builder_get_object (builder,"saveButton"));
     gtk_builder_connect_signals (builder, NULL);
 
     drawArea = GTK_WIDGET(gtk_builder_get_object(builder, "labyrinthDrawingArea"));
