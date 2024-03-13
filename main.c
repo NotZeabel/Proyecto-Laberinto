@@ -8,8 +8,6 @@ double zoomScale = 1.0;
 double maxZoom;
 gboolean dragging = FALSE;
 gdouble initialX, initialY, previousX, previousY, offsetX, offsetY = 0;
-double viewportWidth, viewportHeight;
-double viewportX, viewportY;
 
 //================= Logic ==================
 
@@ -241,61 +239,76 @@ void generateLabyrinth(struct maze* lab){
 //================= Draw ==================
 
 gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unused)) gpointer data) {
+    //Initialize drawing area
+    //Taken from http://www.peteronion.org.uk/GtkExamples/GladeTutorials.html    
     guint width, height;
-    width = gtk_widget_get_allocated_width(widget);
-    height = gtk_widget_get_allocated_height(widget);
 
-    cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
-    cairo_rectangle(cr, 0, 0, width, height);
-    cairo_fill(cr);
+    width = gtk_widget_get_allocated_width (widget);
+    height = gtk_widget_get_allocated_height (widget);
 
-    double viewportWidth = width / zoomScale;
-    double viewportHeight = height / zoomScale;
-    double viewportX = (width - viewportWidth) / 2.0 + (offsetX / zoomScale);
-    double viewportY = (height - viewportHeight) / 2.0 + (offsetY / zoomScale);
-
-    cairo_set_line_width(cr, 3.0);
-    cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
-    cairo_rectangle(cr, viewportX, viewportY, viewportWidth, viewportHeight);
-    cairo_stroke(cr);
-
-    cairo_translate(cr, viewportX, viewportY);
+    cairo_translate(cr, offsetX, offsetY);
     cairo_scale(cr, zoomScale, zoomScale);
 
+    int borderPoints[][2] = {
+        {10,10},{0,0},
+        {width,0},{width-10,10},
+        {width-10,height-10},{width,height},
+        {0,height},{10,height-10},
+        {10,10},{0,0},
+    };
+
+    // Make background a solid black color
+    cairo_set_source_rgba (cr, 0.0, 0.0, 0.0, 1.0);
+    cairo_rectangle(cr,0,0,width,height);
+    cairo_fill(cr);
+
+    // Set fill color to white
+    cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 1.0);
+    cairo_set_line_width(cr,1);
+    
+    // Add white border
+    for(int start=0; start<=6; start+=2)
+    {
+        for(int n=start; n<=start+3; n++)
+        {
+            cairo_line_to(cr,borderPoints[n][0],borderPoints[n][1]);
+        }
+        
+        // Draw and fill the border
+        cairo_close_path(cr);
+        cairo_stroke_preserve(cr);
+        cairo_fill(cr);
+    }
+
+    //Draw actual labyrinth
     int rows = lab.rows;
     int cols = lab.cols;
     int cellHeight = height / rows;
     int cellWidth = width / cols;
 
-    if (cellHeight == 0) cellHeight = 1;
-    if (cellWidth == 0) cellWidth = 1;
+    if(cellHeight ==  0) cellHeight=1;
+    if(cellWidth ==  0) cellWidth=1;
 
     double strokeWidth = fmax(1.0 / zoomScale, 0.25);
-    cairo_set_line_width(cr, strokeWidth);
+    cairo_set_line_width(cr,strokeWidth);
     cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
     for (int i = 0; i < rows; i++) {
         for (int j = 0; j < cols; j++) {
             int xCord = j * cellWidth;
             int yCord = i * cellHeight;
 
-            if (!((lab.matrix[i][j].barrier & B_RIGHT) > 0)) {
-                if (xCord + cellWidth >= viewportX && xCord <= viewportX + viewportWidth) {
-                    cairo_move_to(cr, fmax(xCord, viewportX), yCord);
-                    cairo_line_to(cr, fmin(xCord + cellWidth, viewportX + viewportWidth), yCord);
-                }
+            if(!((lab.matrix[i][j].barrier & B_RIGHT) > 0)) {
+                cairo_move_to(cr, xCord + cellWidth, yCord);
+                cairo_line_to(cr, xCord + cellWidth, yCord + cellHeight);
             }
 
-            if (!((lab.matrix[i][j].barrier & B_LOWER) > 0)) {
-                if (yCord + cellHeight >= viewportY && yCord <= viewportY + viewportHeight) {
-                    cairo_move_to(cr, xCord, fmax(yCord, viewportY));
-                    cairo_line_to(cr, xCord, fmin(yCord + cellHeight, viewportY + viewportHeight));
-                }
+            if(!((lab.matrix[i][j].barrier & B_LOWER) > 0)) {
+                cairo_move_to(cr, xCord, yCord + cellHeight);
+                cairo_line_to(cr, xCord + cellWidth, yCord + cellHeight);
             }
         }
     }
     cairo_stroke(cr);
-
-    printf("strW: %f, zoomS: %f, ofX: %f, ofY: %f vpH: %f, vpW: %f, vpX: %f, vpY: %f, cH: %d, cW: %d\n\n", strokeWidth, zoomScale, offsetX, offsetY, viewportHeight, viewportWidth, viewportX, viewportY, cellHeight, cellWidth);
 
     return FALSE;
 }
@@ -343,13 +356,7 @@ gboolean buttonReleased(GtkWidget *widget, GdkEventButton *event, gpointer data)
 
 gboolean motionNotify(GtkWidget *widget, GdkEventMotion *event, gpointer user_data) {
     if(dragging) {
-        double sensitivity;
-
-        if (zoomScale >= 1.0 && zoomScale <= 1.5) {
-            sensitivity = 1.0 / zoomScale;
-        } else {
-            sensitivity = 1.0 / (zoomScale * 2.1);
-        }
+        double sensitivity = 0.55;
 
         gdouble dirX = (event->x - previousX) * sensitivity;
         gdouble dirY = (event->y - previousY) * sensitivity;
