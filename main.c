@@ -314,9 +314,9 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
 
 gboolean zoomEvent(GtkWidget *widget, GdkEventScroll *event, gpointer data){
     if (event->direction == GDK_SCROLL_UP) {
-        zoom = zoom * 1.1;
+        zoom = zoom - 20;
     } else if(event->direction == GDK_SCROLL_DOWN) {
-        zoom = zoom * 0.9;
+        zoom = zoom + 20;
     }
     
     gtk_widget_queue_draw(widget);
@@ -352,7 +352,6 @@ gboolean buttonReleased(GtkWidget *widget, GdkEventButton *event, gpointer data)
 
 gboolean motionNotify(GtkWidget *widget, GdkEventMotion *event, gpointer user_data) {
     if(dragging) {
-
         gdouble dirX = (event->x - previousX);
         gdouble dirY = (event->y - previousY) ;
 
