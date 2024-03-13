@@ -287,10 +287,20 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
                 cairo_line_to(cr, xCord + cellWidth, yCord + cellHeight);
             }
 
+            if(!((lab.matrix[i][j].barrier & B_LEFT) > 0)) {
+                cairo_move_to(cr, xCord, yCord);
+                cairo_line_to(cr, xCord, yCord + cellHeight);
+            }
+            
             if(!((lab.matrix[i][j].barrier & B_LOWER) > 0)) {
                 cairo_move_to(cr, xCord, yCord + cellHeight);
                 cairo_line_to(cr, xCord + cellWidth, yCord + cellHeight);
             }
+
+            if(!((lab.matrix[i][j].barrier & B_UPPER) > 0)) {
+                cairo_move_to(cr, xCord, yCord);
+                cairo_line_to(cr, xCord + cellWidth, yCord);
+            }            
         }
     }
     cairo_stroke(cr);
