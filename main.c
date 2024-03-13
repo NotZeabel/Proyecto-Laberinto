@@ -497,7 +497,7 @@ void generateButton(__attribute__((unused)) GtkWidget *widget,
             generateLabyrinth(&lab);    
         }else{
             GtkWidget *dialogWindow;
-            const gchar *message = "Error";    
+            const gchar *message = "Error. Input must be a number between 0 and 2048.";    
             dialogWindow = gtk_message_dialog_new(GTK_WINDOW(window), GTK_DIALOG_MODAL, GTK_MESSAGE_ERROR, GTK_BUTTONS_OK, "%s", message);
             gtk_dialog_run(GTK_DIALOG(dialogWindow));
             gtk_widget_destroy(dialogWindow);
