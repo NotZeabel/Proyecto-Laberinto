@@ -352,16 +352,9 @@ gboolean buttonReleased(GtkWidget *widget, GdkEventButton *event, gpointer data)
 
 gboolean motionNotify(GtkWidget *widget, GdkEventMotion *event, gpointer user_data) {
     if(dragging) {
-        double sensitivity;
 
-        if (zoomScale >= 1.0 && zoomScale <= 1.5) {
-            sensitivity = 1.0 / zoomScale;
-        } else {
-            sensitivity = 1.0 / (zoomScale * 2.1);
-        }
-
-        gdouble dirX = (event->x - previousX) * sensitivity;
-        gdouble dirY = (event->y - previousY) * sensitivity;
+        gdouble dirX = (event->x - previousX);
+        gdouble dirY = (event->y - previousY) ;
 
         offsetX += dirX;
         offsetY += dirY;
