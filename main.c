@@ -318,11 +318,13 @@ gboolean zoom(GtkWidget *widget, GdkEventScroll *event, gpointer data){
         }
     } else if(event->direction == GDK_SCROLL_DOWN) {
         zoomScale /= 1.1;
-        if(zoomScale < 1.0) {
+        if(zoomScale <= 1.0) {
             zoomScale = 1.0;
+            offsetX = 0;
+            offsetY = 0;
         }
     }
-
+    
     gtk_widget_queue_draw(widget);
 
     return TRUE;
@@ -356,8 +358,21 @@ gboolean motionNotify(GtkWidget *widget, GdkEventMotion *event, gpointer user_da
         gdouble dirX = (event->x - previousX) * sensitivity;
         gdouble dirY = (event->y - previousY) * sensitivity;
 
+        guint width, height;
+
+        width = gtk_widget_get_allocated_width (widget);
+        height = gtk_widget_get_allocated_height (widget);
+
         offsetX += dirX;
         offsetY += dirY;
+
+        double maxOffsetX = 0;
+        double maxOffsetY = 0;
+        double minOffsetX = width - (width * zoomScale);
+        double minOffsetY = height - (height * zoomScale);
+
+        offsetX = CLAMP(offsetX, minOffsetX, maxOffsetX);
+        offsetY = CLAMP(offsetY, minOffsetY, maxOffsetY);
 
         previousX = event->x;
         previousY = event->y;
@@ -367,6 +382,7 @@ gboolean motionNotify(GtkWidget *widget, GdkEventMotion *event, gpointer user_da
 
     return TRUE;
 }
+
 
 //Save & Load Functions
 
