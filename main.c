@@ -645,11 +645,6 @@ int main(int argc, char **argv)
     gtk_builder_connect_signals (builder, NULL);
 
     drawArea = GTK_WIDGET(gtk_builder_get_object(builder, "labyrinthDrawingArea"));
-    g_signal_connect(G_OBJECT(drawArea), "draw", G_CALLBACK(on_drawingarea_draw), NULL);
-    g_signal_connect(G_OBJECT(drawArea), "scroll-event", G_CALLBACK(zoom), NULL);
-    g_signal_connect(G_OBJECT(drawArea), "button-press-event", G_CALLBACK(buttonPressed), NULL);
-    g_signal_connect(G_OBJECT(drawArea), "button-release-event", G_CALLBACK(buttonReleased), NULL);
-    g_signal_connect(G_OBJECT(drawArea), "motion-notify-event", G_CALLBACK(motionNotify), NULL);
 
     gtk_widget_add_events(drawArea, GDK_SCROLL_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK | GDK_POINTER_MOTION_MASK);
     
