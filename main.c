@@ -249,14 +249,6 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
     cairo_translate(cr, offsetX, offsetY);
     cairo_scale(cr, zoomScale, zoomScale);
 
-    int borderPoints[][2] = {
-        {10,10},{0,0},
-        {width,0},{width-10,10},
-        {width-10,height-10},{width,height},
-        {0,height},{10,height-10},
-        {10,10},{0,0},
-    };
-
     // Make background a solid black color
     cairo_set_source_rgba (cr, 0.0, 0.0, 0.0, 1.0);
     cairo_rectangle(cr,0,0,width,height);
@@ -267,18 +259,10 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
     cairo_set_line_width(cr,1);
     
     // Add white border
-    for(int start=0; start<=6; start+=2)
-    {
-        for(int n=start; n<=start+3; n++)
-        {
-            cairo_line_to(cr,borderPoints[n][0],borderPoints[n][1]);
-        }
-        
-        // Draw and fill the border
-        cairo_close_path(cr);
-        cairo_stroke_preserve(cr);
-        cairo_fill(cr);
-    }
+    cairo_set_line_width(cr, 5);
+    cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 1.0);
+    cairo_rectangle(cr,0,0,width,height);
+    cairo_stroke(cr);
 
     //Draw actual labyrinth
     int rows = lab.rows;
