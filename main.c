@@ -246,9 +246,10 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
     width = gtk_widget_get_allocated_width (widget);
     height = gtk_widget_get_allocated_height (widget);
 
-    cairo_translate(cr, offsetX, offsetY);
+    //airo_translate(cr, offsetX, offsetY);
     cairo_scale(cr, zoomScale, zoomScale);
 
+    
     // Make background a solid black color
     cairo_set_source_rgba (cr, 0.0, 0.0, 0.0, 1.0);
     cairo_rectangle(cr,0,0,width,height);
@@ -267,8 +268,8 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
     //Draw actual labyrinth
     int rows = lab.rows;
     int cols = lab.cols;
-    int padding = 20;
-    int cellHeight = (height-2*padding) / rows;
+     int padding = -5000;
+    int cellHeight = ((height-2*padding)) / rows;
     int cellWidth = (width-2*padding) / cols;
 
     if(cellHeight ==  0) cellHeight=1;
@@ -279,8 +280,12 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
     cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
     for (int i = 0; i < rows; i++) {
         for (int j = 0; j < cols; j++) {
-            int xCord = j * cellWidth + padding;
-            int yCord = i * cellHeight + padding;
+            int xCord = j * cellWidth + padding + offsetX;
+            int yCord = i * cellHeight + padding + offsetY;
+
+            if(xCord<0 || xCord>width || yCord<0 || yCord>height){
+                continue;
+            }
 
             if(!((lab.matrix[i][j].barrier & B_RIGHT) > 0)) {
                 cairo_move_to(cr, xCord + cellWidth, yCord);
@@ -346,6 +351,11 @@ gboolean buttonPressed(GtkWidget *widget, GdkEventButton *event, gpointer data) 
 gboolean buttonReleased(GtkWidget *widget, GdkEventButton *event, gpointer data) {
     if(event->button == GDK_BUTTON_PRIMARY) {
         dragging = FALSE;
+        double curentOffsetX = offsetX;
+        double curentOffsetY = offsetY;
+
+        curentOffsetX = curentOffsetX + curentOffsetY;
+
     }
 
     return TRUE;
