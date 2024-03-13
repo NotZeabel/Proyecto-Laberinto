@@ -4,8 +4,8 @@
 #include <math.h>
  
 GtkWidget* window;
-double zoomScale = 1.0;
-double maxZoom;
+int zoom;
+double zoomScale;
 gboolean dragging = FALSE;
 gdouble initialX, initialY, previousX, previousY, offsetX, offsetY = 0;
 
@@ -230,7 +230,7 @@ void generateLabyrinth(struct maze* lab){
     free(frontiers);
     //printLabyrinth(lab);   //Remove in final version
 
-    maxZoom = fmin(1.0 * lab->cols, 1.0 * lab->rows);
+    zoom = 20;
 }
 
 
@@ -245,9 +245,6 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
 
     width = gtk_widget_get_allocated_width (widget);
     height = gtk_widget_get_allocated_height (widget);
-
-    //airo_translate(cr, offsetX, offsetY);
-    cairo_scale(cr, zoomScale, zoomScale);
 
     
     // Make background a solid black color
@@ -268,20 +265,20 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
     //Draw actual labyrinth
     int rows = lab.rows;
     int cols = lab.cols;
-     int padding = -5000;
-    int cellHeight = ((height-2*padding)) / rows;
-    int cellWidth = (width-2*padding) / cols;
+    int cellHeight = ((height-2*zoom)) / rows;
+    int cellWidth = (width-2*zoom) / cols;
 
     if(cellHeight ==  0) cellHeight=1;
     if(cellWidth ==  0) cellWidth=1;
+    zoomScale=20;
 
-    double strokeWidth = 1.0 / zoomScale;
+    double strokeWidth = 1.0;
     cairo_set_line_width(cr,strokeWidth);
     cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
     for (int i = 0; i < rows; i++) {
         for (int j = 0; j < cols; j++) {
-            int xCord = j * cellWidth + padding + offsetX;
-            int yCord = i * cellHeight + padding + offsetY;
+            int xCord = j * cellWidth + zoom + offsetX;
+            int yCord = i * cellHeight + zoom + offsetY;
 
             if(xCord<0 || xCord>width || yCord<0 || yCord>height){
                 continue;
@@ -315,19 +312,11 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
 
 //Zoom In/Out
 
-gboolean zoom(GtkWidget *widget, GdkEventScroll *event, gpointer data){
+gboolean zoomEvent(GtkWidget *widget, GdkEventScroll *event, gpointer data){
     if (event->direction == GDK_SCROLL_UP) {
-        zoomScale *= 1.1;
-        if(zoomScale > maxZoom) {
-            zoomScale = maxZoom;
-        }
+        zoom = zoom * 1.1;
     } else if(event->direction == GDK_SCROLL_DOWN) {
-        zoomScale /= 1.1;
-        if(zoomScale <= 1.0) {
-            zoomScale = 1.0;
-            offsetX = 0;
-            offsetY = 0;
-        }
+        zoom = zoom * 0.9;
     }
     
     gtk_widget_queue_draw(widget);
@@ -363,26 +352,19 @@ gboolean buttonReleased(GtkWidget *widget, GdkEventButton *event, gpointer data)
 
 gboolean motionNotify(GtkWidget *widget, GdkEventMotion *event, gpointer user_data) {
     if(dragging) {
-        double sensitivity = 0.55;
+        double sensitivity;
+
+        if (zoomScale >= 1.0 && zoomScale <= 1.5) {
+            sensitivity = 1.0 / zoomScale;
+        } else {
+            sensitivity = 1.0 / (zoomScale * 2.1);
+        }
 
         gdouble dirX = (event->x - previousX) * sensitivity;
         gdouble dirY = (event->y - previousY) * sensitivity;
 
-        guint width, height;
-
-        width = gtk_widget_get_allocated_width (widget);
-        height = gtk_widget_get_allocated_height (widget);
-
         offsetX += dirX;
         offsetY += dirY;
-
-        double maxOffsetX = 0;
-        double maxOffsetY = 0;
-        double minOffsetX = width - (width * zoomScale);
-        double minOffsetY = height - (height * zoomScale);
-
-        offsetX = CLAMP(offsetX, minOffsetX, maxOffsetX);
-        offsetY = CLAMP(offsetY, minOffsetY, maxOffsetY);
 
         previousX = event->x;
         previousY = event->y;
@@ -452,8 +434,8 @@ void loadFile(char* path){
         fread(lab.matrix[i], sizeof(struct cell), lab.cols, file);
     }    
 
-    //Calc Max Zoom
-    maxZoom = fmin(1.0 * lab.cols, 1.0 * lab.rows);
+    //Assign Initial Zoom
+    zoom = 20;
     
     fclose(file);   
 }
@@ -635,7 +617,7 @@ int main(int argc, char **argv)
 
     drawArea = GTK_WIDGET(gtk_builder_get_object(builder, "labyrinthDrawingArea"));
     g_signal_connect(G_OBJECT(drawArea), "draw", G_CALLBACK(on_drawingarea_draw), NULL);
-    g_signal_connect(G_OBJECT(drawArea), "scroll-event", G_CALLBACK(zoom), NULL);
+    g_signal_connect(G_OBJECT(drawArea), "scroll-event", G_CALLBACK(zoomEvent), NULL);
     g_signal_connect(G_OBJECT(drawArea), "button-press-event", G_CALLBACK(buttonPressed), NULL);
     g_signal_connect(G_OBJECT(drawArea), "button-release-event", G_CALLBACK(buttonReleased), NULL);
     g_signal_connect(G_OBJECT(drawArea), "motion-notify-event", G_CALLBACK(motionNotify), NULL);
