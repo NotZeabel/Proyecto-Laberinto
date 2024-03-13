@@ -1,0 +1,11 @@
+<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg" data-name="Layer 1">
+
+ <title>Artboard 12</title>
+ <g>
+  <title>Layer 1</title>
+  <path id="svg_1" stroke-width="5px" stroke-miterlimit="10" stroke-linecap="square" stroke="#000" fill="none" d="m51.5,72c0,3.72 -2.22,6.69 -4.94,6.69l-22.62,0c-2.71,0 -4.94,-3 -4.94,-6.69l0,-44c0,-3.72 2.22,-6.69 4.94,-6.69l22.62,0c2.71,0 4.94,3 4.94,6.69" class="cls-1"/>
+  <line id="svg_2" stroke-width="5px" stroke-miterlimit="10" stroke-linecap="square" stroke="#000" fill="none" y2="50" x2="78.24" y1="50" x1="38.82" class="cls-1"/>
+  <line id="svg_3" stroke-width="5px" stroke-miterlimit="10" stroke-linecap="square" stroke="#000" fill="none" y2="50" x2="81" y1="34.58" x1="65.58" class="cls-1"/>
+  <line id="svg_4" stroke-width="5px" stroke-miterlimit="10" stroke-linecap="square" stroke="#000" fill="none" y2="50" x2="81" y1="65.42" x1="65.58" class="cls-1"/>
+ </g>
+</svg>
