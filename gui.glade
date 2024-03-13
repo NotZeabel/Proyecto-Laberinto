@@ -2,6 +2,31 @@
 <!-- Generated with glade 3.40.0 -->
 <interface>
   <requires lib="gtk+" version="3.24"/>
+  <object class="GtkImage" id="imageExit">
+    <property name="visible">True</property>
+    <property name="can-focus">False</property>
+    <property name="pixbuf">Icons/exit.svg</property>
+  </object>
+  <object class="GtkImage" id="imageGears">
+    <property name="visible">True</property>
+    <property name="can-focus">False</property>
+    <property name="pixbuf">Icons/gears.svg</property>
+  </object>
+  <object class="GtkImage" id="imageOpen">
+    <property name="visible">True</property>
+    <property name="can-focus">False</property>
+    <property name="pixbuf">Icons/open.svg</property>
+  </object>
+  <object class="GtkImage" id="imageSave">
+    <property name="visible">True</property>
+    <property name="can-focus">False</property>
+    <property name="pixbuf">Icons/save.svg</property>
+  </object>
+  <object class="GtkImage" id="imageSolve">
+    <property name="visible">True</property>
+    <property name="can-focus">False</property>
+    <property name="pixbuf">Icons/solve.svg</property>
+  </object>
   <object class="GtkWindow" id="window">
     <property name="can-focus">False</property>
     <property name="title" translatable="yes">LABYRINTH</property>
@@ -31,10 +56,11 @@
             <property name="homogeneous">True</property>
             <child>
               <object class="GtkButton">
-                <property name="label" translatable="yes">Generate</property>
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
                 <property name="receives-default">True</property>
+                <property name="tooltip-text" translatable="yes">Generate</property>
+                <property name="image">imageGears</property>
                 <signal name="clicked" handler="generateButton" swapped="no"/>
               </object>
               <packing>
@@ -45,11 +71,12 @@
             </child>
             <child>
               <object class="GtkButton" id="solveButton">
-                <property name="label" translatable="yes">Solve</property>
                 <property name="width-request">100</property>
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
                 <property name="receives-default">True</property>
+                <property name="tooltip-text" translatable="yes">Solve</property>
+                <property name="image">imageSolve</property>
                 <signal name="clicked" handler="solveButton" swapped="no"/>
               </object>
               <packing>
@@ -60,12 +87,13 @@
             </child>
             <child>
               <object class="GtkButton" id="saveButton">
-                <property name="label" translatable="yes">Save</property>
                 <property name="width-request">70</property>
                 <property name="visible">True</property>
                 <property name="sensitive">False</property>
                 <property name="can-focus">True</property>
                 <property name="receives-default">True</property>
+                <property name="tooltip-text" translatable="yes">Save</property>
+                <property name="image">imageSave</property>
                 <signal name="clicked" handler="saveButton" swapped="no"/>
               </object>
               <packing>
@@ -76,11 +104,12 @@
             </child>
             <child>
               <object class="GtkButton" id="loadButton">
-                <property name="label" translatable="yes">Load</property>
                 <property name="width-request">71</property>
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
                 <property name="receives-default">True</property>
+                <property name="tooltip-text" translatable="yes">Open</property>
+                <property name="image">imageOpen</property>
                 <signal name="clicked" handler="loadButton" swapped="no"/>
               </object>
               <packing>
@@ -91,12 +120,13 @@
             </child>
             <child>
               <object class="GtkButton" id="exitButton">
-                <property name="label" translatable="yes">Exit</property>
                 <property name="width-request">70</property>
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
                 <property name="receives-default">True</property>
+                <property name="tooltip-text" translatable="yes">Exit</property>
                 <property name="hexpand">False</property>
+                <property name="image">imageExit</property>
                 <signal name="clicked" handler="exitButton" swapped="no"/>
               </object>
               <packing>
@@ -108,7 +138,7 @@
           </object>
           <packing>
             <property name="x">900</property>
-            <property name="y">163</property>
+            <property name="y">30</property>
           </packing>
         </child>
         <child>
