@@ -267,8 +267,9 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
     //Draw actual labyrinth
     int rows = lab.rows;
     int cols = lab.cols;
-    int cellHeight = height / rows;
-    int cellWidth = width / cols;
+    int padding = 20;
+    int cellHeight = (height-2*padding) / rows;
+    int cellWidth = (width-2*padding) / cols;
 
     if(cellHeight ==  0) cellHeight=1;
     if(cellWidth ==  0) cellWidth=1;
@@ -278,8 +279,8 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
     cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
     for (int i = 0; i < rows; i++) {
         for (int j = 0; j < cols; j++) {
-            int xCord = j * cellWidth;
-            int yCord = i * cellHeight;
+            int xCord = j * cellWidth + padding;
+            int yCord = i * cellHeight + padding;
 
             if(!((lab.matrix[i][j].barrier & B_RIGHT) > 0)) {
                 cairo_move_to(cr, xCord + cellWidth, yCord);
