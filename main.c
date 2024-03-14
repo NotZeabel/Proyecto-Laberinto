@@ -262,11 +262,16 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
     cairo_rectangle(cr,0,0,width,height);
     cairo_stroke(cr);
 
+    
+
     //Draw actual labyrinth
     int rows = lab.rows;
     int cols = lab.cols;
-    int cellHeight = ((height-20)*zoom) / rows;
-    int cellWidth = ((width-20)*zoom) / cols;
+    int padding = 20;
+    int mazeHeight = height-padding;
+    int mazeWidth = width-padding;
+    int cellHeight =  mazeHeight*zoom/rows;
+    int cellWidth =  mazeWidth*zoom/cols;
 
     if(cellHeight <= 0) cellHeight=1;
     if(cellWidth <= 0) cellWidth=1;
@@ -279,8 +284,8 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
     cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
     for (int i = 0; i < rows; i++) {
         for (int j = 0; j < cols; j++) {
-            int xCord = j * cellWidth + offsetX + 10;
-            int yCord = i * cellHeight + offsetY + 10;
+            int xCord = j * cellWidth + offsetX + padding/2;
+            int yCord = i * cellHeight + offsetY + padding/2;
 
             if((xCord<0 && xCord+cellWidth<0)  || (xCord>width && xCord+cellWidth>width) ||
                 (yCord<0 && yCord+cellHeight<0) || (yCord>height && yCord+cellHeight>height)){
