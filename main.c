@@ -251,10 +251,6 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
     cairo_set_source_rgba (cr, 0.0, 0.0, 0.0, 1.0);
     cairo_rectangle(cr,0,0,width,height);
     cairo_fill(cr);
-
-    // Set fill color to white
-    cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 1.0);
-    cairo_set_line_width(cr,1);
     
     // Add white border
     cairo_set_line_width(cr, 5);
