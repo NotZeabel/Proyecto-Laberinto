@@ -151,7 +151,7 @@
             <signal name="button-release-event" handler="buttonReleased" swapped="no"/>
             <signal name="draw" handler="on_drawingarea_draw" swapped="no"/>
             <signal name="motion-notify-event" handler="motionNotify" swapped="no"/>
-            <signal name="scroll-event" handler="zoom" swapped="no"/>
+            <signal name="scroll-event" handler="zoomEvent" swapped="no"/>
           </object>
         </child>
       </object>

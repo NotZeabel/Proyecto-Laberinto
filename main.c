@@ -337,7 +337,7 @@ gboolean zoomEvent(GtkWidget *widget, GdkEventScroll *event, gpointer data){
     if(zoom<1) zoom=1;
     if(zoom == 1) offsetX = offsetY = 0;
 
-    printf("z: %f\n\n", zoom);
+    //printf("z: %f\n\n", zoom);
     
     gtk_widget_queue_draw(widget);
 
