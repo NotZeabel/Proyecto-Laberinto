@@ -5,8 +5,8 @@
  
 GtkWidget* window;
 GtkWidget* saveWidget;
-double zoomScale = 1.0;
-double maxZoom;
+double zoom;
+double zoomScale;
 gboolean dragging = FALSE;
 gdouble initialX, initialY, previousX, previousY, offsetX, offsetY = 0;
 
@@ -231,7 +231,7 @@ void generateLabyrinth(struct maze* lab){
     free(frontiers);
     //printLabyrinth(lab);   //Remove in final version
 
-    maxZoom = fmin(1.0 * lab->cols, 1.0 * lab->rows);
+    zoom = 1;
 }
 
 
@@ -249,74 +249,72 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
     width = gtk_widget_get_allocated_width (widget);
     height = gtk_widget_get_allocated_height (widget);
 
-    double centerX = (width / 2.0) - offsetX;
-    double centerY = (height / 2.0) - offsetY;
-
-    cairo_translate(cr, centerX, centerY);
-    cairo_scale(cr, zoomScale, zoomScale);
-    cairo_translate(cr, -centerX, -centerY);
-
-    if(dragging) {
-        cairo_translate(cr, offsetX, offsetY);
-    }
-
-    int borderPoints[][2] = {
-        {10,10},{0,0},
-        {width,0},{width-10,10},
-        {width-10,height-10},{width,height},
-        {0,height},{10,height-10},
-        {10,10},{0,0},
-    };
-
+    
     // Make background a solid black color
     cairo_set_source_rgba (cr, 0.0, 0.0, 0.0, 1.0);
     cairo_rectangle(cr,0,0,width,height);
     cairo_fill(cr);
-
-    // Set fill color to white
-    cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 1.0);
-    cairo_set_line_width(cr,1);
     
     // Add white border
-    for(int start=0; start<=6; start+=2)
-    {
-        for(int n=start; n<=start+3; n++)
-        {
-            cairo_line_to(cr,borderPoints[n][0],borderPoints[n][1]);
-        }
-        
-        // Draw and fill the border
-        cairo_close_path(cr);
-        cairo_stroke_preserve(cr);
-        cairo_fill(cr);
-    }
+    cairo_set_line_width(cr, 5);
+    cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 1.0);
+    cairo_rectangle(cr,0,0,width,height);
+    cairo_stroke(cr);
+
+    
 
     //Draw actual labyrinth
     int rows = lab.rows;
     int cols = lab.cols;
-    int cellHeight = height / rows;
-    int cellWidth = width / cols;
+    int padding = 20;
+    int mazeHeight = height-padding;
+    int mazeWidth = width-padding;
+    int cellHeight =  mazeHeight*zoom/rows;
+    int cellWidth =  mazeWidth*zoom/cols;
 
-    if(cellHeight ==  0) cellHeight=1;
-    if(cellWidth ==  0) cellWidth=1;
+    if(zoom==1){
+        offsetX=offsetY=0;
+    }else{
+        if(padding/2 - (rows-1)*cellHeight > offsetY) offsetY = padding/2 - (rows-1)*cellHeight;
+        if(padding/2 - (cols-1)*cellWidth > offsetX) offsetX = padding/2 - (cols-1)*cellWidth;
+        if(450 - padding/2 < offsetX) offsetX = 450 - padding/2;
+        if(450 - padding/2 < offsetY) offsetY = 450 - padding/2;
+    }
+    
 
-    double strokeWidth = fmax(1.0 / zoomScale, 0.5);
+
+    double strokeWidth = 1.0;
     cairo_set_line_width(cr,strokeWidth);
     cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
     for (int i = 0; i < rows; i++) {
         for (int j = 0; j < cols; j++) {
-            int xCord = j * cellWidth;
-            int yCord = i * cellHeight;
+            int xCord = j * cellWidth + offsetX + padding/2;
+            int yCord = i * cellHeight + offsetY + padding/2;
+
+            if((xCord<0 && xCord+cellWidth<0)  || (xCord>width && xCord+cellWidth>width) ||
+                (yCord<0 && yCord+cellHeight<0) || (yCord>height && yCord+cellHeight>height)){
+                continue;
+            }
 
             if(!((lab.matrix[i][j].barrier & B_RIGHT) > 0)) {
                 cairo_move_to(cr, xCord + cellWidth, yCord);
                 cairo_line_to(cr, xCord + cellWidth, yCord + cellHeight);
             }
 
+            if(!((lab.matrix[i][j].barrier & B_LEFT) > 0)) {
+                cairo_move_to(cr, xCord, yCord);
+                cairo_line_to(cr, xCord, yCord + cellHeight);
+            }
+            
             if(!((lab.matrix[i][j].barrier & B_LOWER) > 0)) {
                 cairo_move_to(cr, xCord, yCord + cellHeight);
                 cairo_line_to(cr, xCord + cellWidth, yCord + cellHeight);
             }
+
+            if(!((lab.matrix[i][j].barrier & B_UPPER) > 0)) {
+                cairo_move_to(cr, xCord, yCord);
+                cairo_line_to(cr, xCord + cellWidth, yCord);
+            }            
         }
     }
     cairo_stroke(cr);
@@ -326,19 +324,21 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
 
 //Zoom In/Out
 
-gboolean zoom(GtkWidget *widget, GdkEventScroll *event, gpointer data){
+#define zoomFactor 0.25
+
+gboolean zoomEvent(GtkWidget *widget, GdkEventScroll *event, gpointer data){
     if (event->direction == GDK_SCROLL_UP) {
-        zoomScale *= 1.1;
-        if(zoomScale > maxZoom) {
-            zoomScale = maxZoom;
-        }
+        zoom += (zoomFactor * zoom);
     } else if(event->direction == GDK_SCROLL_DOWN) {
-        zoomScale /= 1.1;
-        if(zoomScale < 1.0) {
-            zoomScale = 1.0;
-        }
+        zoom -= (zoomFactor * (zoom / 2)); 
     }
 
+    if(zoom > MIN(lab.cols, lab.rows)) zoom = MIN(lab.cols, lab.rows);
+    if(zoom<1) zoom=1;
+    if(zoom == 1) offsetX = offsetY = 0;
+
+    printf("z: %f\n\n", zoom);
+    
     gtk_widget_queue_draw(widget);
 
     return TRUE;
@@ -360,6 +360,11 @@ gboolean buttonPressed(GtkWidget *widget, GdkEventButton *event, gpointer data) 
 gboolean buttonReleased(GtkWidget *widget, GdkEventButton *event, gpointer data) {
     if(event->button == GDK_BUTTON_PRIMARY) {
         dragging = FALSE;
+        double curentOffsetX = offsetX;
+        double curentOffsetY = offsetY;
+
+        curentOffsetX = curentOffsetX + curentOffsetY;
+
     }
 
     return TRUE;
@@ -367,16 +372,8 @@ gboolean buttonReleased(GtkWidget *widget, GdkEventButton *event, gpointer data)
 
 gboolean motionNotify(GtkWidget *widget, GdkEventMotion *event, gpointer user_data) {
     if(dragging) {
-        double sensitivity;
-
-        if (zoomScale >= 1.0 && zoomScale <= 1.5) {
-            sensitivity = 1.0 / zoomScale;
-        } else {
-            sensitivity = 1.0 / (zoomScale * 2.1);
-        }
-
-        gdouble dirX = (event->x - previousX) * sensitivity;
-        gdouble dirY = (event->y - previousY) * sensitivity;
+        gdouble dirX = (event->x - previousX);
+        gdouble dirY = (event->y - previousY) ;
 
         offsetX += dirX;
         offsetY += dirY;
@@ -389,6 +386,7 @@ gboolean motionNotify(GtkWidget *widget, GdkEventMotion *event, gpointer user_da
 
     return TRUE;
 }
+
 
 
 
@@ -457,8 +455,8 @@ void loadFile(char* path){
         fread(lab.matrix[i], sizeof(struct cell), lab.cols, file);
     }    
 
-    //Calc Max Zoom
-    maxZoom = fmin(1.0 * lab.cols, 1.0 * lab.rows);
+    //Assign Initial Zoom
+    zoom = 1;
     
     enableSave();
     fclose(file);   
