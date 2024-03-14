@@ -310,13 +310,20 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
 
 //Zoom In/Out
 
+#define zoomFactor 0.25
+
 gboolean zoomEvent(GtkWidget *widget, GdkEventScroll *event, gpointer data){
     if (event->direction == GDK_SCROLL_UP) {
-        if(zoom<MAX(lab.cols, lab.rows)) zoom++;
+        zoom += (zoomFactor * zoom);
     } else if(event->direction == GDK_SCROLL_DOWN) {
-        if(zoom>1) zoom--;
-        if(zoom==1) offsetX=offsetY=0;
+        zoom -= (zoomFactor * (zoom / 2)); 
     }
+
+    if(zoom > MIN(lab.cols, lab.rows)) zoom = MIN(lab.cols, lab.rows);
+    if(zoom<1) zoom=1;
+    if(zoom == 1) offsetX = offsetY = 0;
+
+    printf("z: %f\n\n", zoom);
     
     gtk_widget_queue_draw(widget);
 
