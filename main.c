@@ -4,7 +4,7 @@
 #include <math.h>
  
 GtkWidget* window;
-int zoom;
+double zoom;
 double zoomScale;
 gboolean dragging = FALSE;
 gdouble initialX, initialY, previousX, previousY, offsetX, offsetY = 0;
@@ -230,7 +230,7 @@ void generateLabyrinth(struct maze* lab){
     free(frontiers);
     //printLabyrinth(lab);   //Remove in final version
 
-    zoom = 20;
+    zoom = 1;
 }
 
 
@@ -265,20 +265,22 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
     //Draw actual labyrinth
     int rows = lab.rows;
     int cols = lab.cols;
-    int cellHeight = ((height-2*zoom)) / rows;
-    int cellWidth = (width-2*zoom) / cols;
+    int cellHeight = ((height-20)*zoom) / rows;
+    int cellWidth = ((width-20)*zoom) / cols;
 
-    if(cellHeight ==  0) cellHeight=1;
-    if(cellWidth ==  0) cellWidth=1;
-    zoomScale=20;
+    if(cellHeight <= 0) cellHeight=1;
+    if(cellWidth <= 0) cellWidth=1;
+    if(cellHeight > height-20) cellHeight=height-20;
+    if(cellWidth > width-20) cellWidth=width-20;
+
 
     double strokeWidth = 1.0;
     cairo_set_line_width(cr,strokeWidth);
     cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
     for (int i = 0; i < rows; i++) {
         for (int j = 0; j < cols; j++) {
-            int xCord = j * cellWidth + zoom + offsetX;
-            int yCord = i * cellHeight + zoom + offsetY;
+            int xCord = j * cellWidth + offsetX + 10;
+            int yCord = i * cellHeight + offsetY + 10;
 
             if((xCord<0 && xCord+cellWidth<0)  || (xCord>width && xCord+cellWidth>width) ||
                 (yCord<0 && yCord+cellHeight<0) || (yCord>height && yCord+cellHeight>height)){
@@ -315,9 +317,9 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
 
 gboolean zoomEvent(GtkWidget *widget, GdkEventScroll *event, gpointer data){
     if (event->direction == GDK_SCROLL_UP) {
-        zoom = zoom - 20;
+        zoom += 1;
     } else if(event->direction == GDK_SCROLL_DOWN) {
-        zoom = zoom + 20;
+        if(zoom>1) zoom--;
     }
     
     gtk_widget_queue_draw(widget);
@@ -428,7 +430,7 @@ void loadFile(char* path){
     }    
 
     //Assign Initial Zoom
-    zoom = 20;
+    zoom = 1;
     
     fclose(file);   
 }
