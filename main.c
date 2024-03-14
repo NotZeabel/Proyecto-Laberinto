@@ -5,7 +5,6 @@
  
 GtkWidget* window;
 double zoom;
-double zoomScale;
 gboolean dragging = FALSE;
 gdouble initialX, initialY, previousX, previousY, offsetX, offsetY = 0;
 
@@ -332,9 +331,6 @@ gboolean zoomEvent(GtkWidget *widget, GdkEventScroll *event, gpointer data){
 
     if(zoom > MIN(lab.cols, lab.rows)) zoom = MIN(lab.cols, lab.rows);
     if(zoom<1) zoom=1;
-    if(zoom == 1) offsetX = offsetY = 0;
-
-    printf("z: %f\n\n", zoom);
     
     gtk_widget_queue_draw(widget);
 
