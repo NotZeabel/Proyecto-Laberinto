@@ -280,7 +280,8 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
             int xCord = j * cellWidth + zoom + offsetX;
             int yCord = i * cellHeight + zoom + offsetY;
 
-            if(xCord<0 || xCord>width || yCord<0 || yCord>height){
+            if((xCord<0 && xCord+cellWidth<0)  || (xCord>width && xCord+cellWidth>width) ||
+                (yCord<0 && yCord+cellHeight<0) || (yCord>height && yCord+cellHeight>height)){
                 continue;
             }
 
