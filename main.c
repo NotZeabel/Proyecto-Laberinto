@@ -269,12 +269,6 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
     int cellHeight =  mazeHeight*zoom/rows;
     int cellWidth =  mazeWidth*zoom/cols;
 
-    if(cellHeight <= 0) cellHeight=1;
-    if(cellWidth <= 0) cellWidth=1;
-    if(cellHeight > height-20) cellHeight=height-20;
-    if(cellWidth > width-20) cellWidth=width-20;
-
-
     double strokeWidth = 1.0;
     cairo_set_line_width(cr,strokeWidth);
     cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
@@ -318,9 +312,10 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
 
 gboolean zoomEvent(GtkWidget *widget, GdkEventScroll *event, gpointer data){
     if (event->direction == GDK_SCROLL_UP) {
-        zoom += 1;
+        if(zoom<MAX(lab.cols, lab.rows)) zoom++;
     } else if(event->direction == GDK_SCROLL_DOWN) {
         if(zoom>1) zoom--;
+        if(zoom==1) offsetX=offsetY=0;
     }
     
     gtk_widget_queue_draw(widget);
