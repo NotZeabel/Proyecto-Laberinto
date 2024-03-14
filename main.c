@@ -228,8 +228,9 @@ void generateLabyrinth(struct maze* lab){
         frontierSize = addFrontiers(lab, row, col, frontiers, frontierSize);
     }
     free(frontiers);
-    //printLabyrinth(lab);   //Remove in final version
-
+    
+    lab->matrix[0][0].barrier = lab->matrix[0][0].barrier ^ B_LEFT;
+    lab->matrix[lab->rows-1][lab->cols-1].barrier = lab->matrix[lab->rows-1][lab->cols-1].barrier ^ B_RIGHT;    
     zoom = 1;
 }
 
@@ -265,7 +266,7 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
     //Draw actual labyrinth
     int rows = lab.rows;
     int cols = lab.cols;
-    int padding = 20;
+    int padding = 40;
     int mazeHeight = height-padding;
     int mazeWidth = width-padding;
     int cellHeight =  mazeHeight*zoom/rows;

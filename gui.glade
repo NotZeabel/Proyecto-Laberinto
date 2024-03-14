@@ -43,8 +43,6 @@
         <property name="margin-bottom">10</property>
         <child>
           <object class="GtkBox">
-            <property name="width-request">100</property>
-            <property name="height-request">318</property>
             <property name="visible">True</property>
             <property name="can-focus">False</property>
             <property name="margin-start">10</property>
@@ -52,7 +50,7 @@
             <property name="margin-top">12</property>
             <property name="margin-bottom">10</property>
             <property name="orientation">vertical</property>
-            <property name="spacing">37</property>
+            <property name="spacing">16</property>
             <property name="homogeneous">True</property>
             <child>
               <object class="GtkButton">
@@ -64,7 +62,7 @@
                 <signal name="clicked" handler="generateButton" swapped="no"/>
               </object>
               <packing>
-                <property name="expand">True</property>
+                <property name="expand">False</property>
                 <property name="fill">True</property>
                 <property name="position">0</property>
               </packing>
@@ -137,14 +135,14 @@
             </child>
           </object>
           <packing>
-            <property name="x">900</property>
-            <property name="y">30</property>
+            <property name="x">763</property>
+            <property name="y">7</property>
           </packing>
         </child>
         <child>
           <object class="GtkDrawingArea" id="labyrinthDrawingArea">
-            <property name="width-request">900</property>
-            <property name="height-request">900</property>
+            <property name="width-request">750</property>
+            <property name="height-request">750</property>
             <property name="visible">True</property>
             <property name="can-focus">False</property>
             <signal name="button-press-event" handler="buttonPressed" swapped="no"/>
