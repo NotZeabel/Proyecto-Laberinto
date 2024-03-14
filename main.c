@@ -274,10 +274,13 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
     if(zoom==1){
         offsetX=offsetY=0;
     }else{
-        if(padding/2 - (rows-1)*cellHeight > offsetY) offsetY = padding/2 - (rows-1)*cellHeight;
-        if(padding/2 - (cols-1)*cellWidth > offsetX) offsetX = padding/2 - (cols-1)*cellWidth;
-        if(450 - padding/2 < offsetX) offsetX = 450 - padding/2;
-        if(450 - padding/2 < offsetY) offsetY = 450 - padding/2;
+        int oppositeCorner = rows * cellWidth + offsetX + padding;
+        offsetX = CLAMP(offsetX, -oppositeCorner, 0);
+        offsetY = CLAMP(offsetY, -oppositeCorner, 0);
+        // if(padding/2 - (rows-1)*cellHeight > offsetY) offsetY = padding/2 - (rows-1)*cellHeight;
+        // if(padding/2 - (cols-1)*cellWidth > offsetX) offsetX = padding/2 - (cols-1)*cellWidth;
+        // if(450 - padding/2 < offsetX) offsetX = 450 - padding/2;
+        // if(450 - padding/2 < offsetY) offsetY = 450 - padding/2;
     }
     
 
