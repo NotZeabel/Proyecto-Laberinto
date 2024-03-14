@@ -269,6 +269,17 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
     int cellHeight =  mazeHeight*zoom/rows;
     int cellWidth =  mazeWidth*zoom/cols;
 
+    if(zoom==1){
+        offsetX=offsetY=0;
+    }else{
+        if(padding/2 - (rows-1)*cellHeight > offsetY) offsetY = padding/2 - (rows-1)*cellHeight;
+        if(padding/2 - (cols-1)*cellWidth > offsetX) offsetX = padding/2 - (cols-1)*cellWidth;
+        if(450 - padding/2 < offsetX) offsetX = 450 - padding/2;
+        if(450 - padding/2 < offsetY) offsetY = 450 - padding/2;
+    }
+    
+
+
     double strokeWidth = 1.0;
     cairo_set_line_width(cr,strokeWidth);
     cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
