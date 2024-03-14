@@ -238,7 +238,7 @@ void generateLabyrinth(struct maze* lab){
 
 //================= DRAW ==================
 
-
+#define zoomFactor 0.25
 
 gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unused)) gpointer data) {
     //Initialize drawing area
@@ -274,13 +274,9 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
     if(zoom==1){
         offsetX=offsetY=0;
     }else{
-        int oppositeCorner = rows * cellWidth + offsetX + padding;
+        int oppositeCorner = (rows * cellWidth + offsetX + padding) / (zoomFactor / zoom);
         offsetX = CLAMP(offsetX, -oppositeCorner, 0);
         offsetY = CLAMP(offsetY, -oppositeCorner, 0);
-        // if(padding/2 - (rows-1)*cellHeight > offsetY) offsetY = padding/2 - (rows-1)*cellHeight;
-        // if(padding/2 - (cols-1)*cellWidth > offsetX) offsetX = padding/2 - (cols-1)*cellWidth;
-        // if(450 - padding/2 < offsetX) offsetX = 450 - padding/2;
-        // if(450 - padding/2 < offsetY) offsetY = 450 - padding/2;
     }
     
 
@@ -325,8 +321,6 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
 }
 
 //Zoom In/Out
-
-#define zoomFactor 0.25
 
 gboolean zoomEvent(GtkWidget *widget, GdkEventScroll *event, gpointer data){
     if (event->direction == GDK_SCROLL_UP) {
