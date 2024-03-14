@@ -42,10 +42,10 @@ Todo el codigo debe estar escrito en C (no C++). Todas las interfaces deben ser 
 - [x] Botón Generar
   - [x] Subventana para tamaño (max 2048x2048)
 - [x] Subventana de Botón Resolver
-- [ ] Cairo
+- [x] Cairo
   - [x] Dibujar Laberinto
   - [x] Zoom in/out (con mouse)
-  - [ ] Mover área visible (con mouse)
+  - [x] Mover área visible (con mouse)
 - [x] Lógica
   - [x] Struct celda con estado y barrera
   - [x] Matriz de celdas
@@ -59,4 +59,4 @@ Todo el codigo debe estar escrito en C (no C++). Todas las interfaces deben ser 
     - [x] Función posicionVecino
   - [x] Usar malloc
   - [x] Liberar memoria
-- [ ] Agrandar interfaz
+- [x] Agrandar interfaz
