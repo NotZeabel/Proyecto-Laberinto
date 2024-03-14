@@ -271,6 +271,9 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
     int cellHeight =  mazeHeight*zoom/rows;
     int cellWidth =  mazeWidth*zoom/cols;
 
+    if(cellHeight < 1) cellHeight=1;
+    if(cellWidth < 1) cellWidth=1;
+
     if(zoom==1){
         offsetX=offsetY=0;
     }else{
