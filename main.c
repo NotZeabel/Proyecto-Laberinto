@@ -274,8 +274,8 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
     if(zoom==1){
         offsetX=offsetY=0;
     }else{
-        int oppositeCornerX = (rows * cellWidth + offsetX + padding) / (zoomFactor * zoom);
-        int oppositeCornerY = (rows * cellWidth + offsetY + padding) / (zoomFactor * zoom);
+        int oppositeCornerX = (cols * cellWidth + offsetX + padding) / (zoomFactor / zoom);
+        int oppositeCornerY = (rows * cellHeight + offsetY + padding) / (zoomFactor / zoom);
         offsetX = CLAMP(offsetX, -oppositeCornerX, 0);
         offsetY = CLAMP(offsetY, -oppositeCornerY, 0);
     }
