@@ -2,15 +2,20 @@
 #include <gtk/gtk.h>
 #include <stdbool.h>
 #include <math.h>
- 
+
+
+//================= Defintions ==================
+
+//UI 
 GtkWidget* window;
 GtkWidget* saveWidget;
 double zoom;
 gboolean dragging = FALSE;
 gdouble initialX, initialY, previousX, previousY, offsetX, offsetY = 0;
 
-//================= LOGIC ==================
 
+
+//Maze
 #define FRONTIER -1
 #define NONE 0
 #define LABYRINTH 1
@@ -19,6 +24,9 @@ gdouble initialX, initialY, previousX, previousY, offsetX, offsetY = 0;
 #define B_LOWER 0b0100
 #define B_LEFT 0b1000
 
+
+
+//TODO: make all the structs typedef
 struct cell{
     int state; 
     char barrier;
@@ -37,6 +45,25 @@ struct pos{
 
 struct maze lab = {NULL, 1, 1};
 
+
+//Solutions
+struct node{
+    struct node* next;    
+    struct pos position;
+};
+
+
+bool randomMouseEnable = false;
+const struct pos start = {0,0};
+struct node randomMouseSolution = {NULL, start};
+
+
+
+
+
+
+
+//================= LOGIC ==================
 
 void freeLabyrinth(struct maze* lab){
     if(lab->matrix != NULL){
@@ -236,6 +263,95 @@ void generateLabyrinth(struct maze* lab){
 
 
 
+//Solutions
+
+char leftDirection(char direction){
+    switch (direction){
+     case B_UPPER:
+        return B_LEFT;        
+    case B_LOWER:
+        return B_RIGHT;
+    case B_RIGHT:        
+        return B_UPPER;        
+    case B_LEFT:
+        return B_LOWER;    
+     default:
+        return 0;
+     }    
+}
+
+char rightDirection(char direction){
+    switch (direction){
+     case B_UPPER:
+        return B_RIGHT;        
+    case B_LOWER:
+        return B_LEFT;
+    case B_RIGHT:        
+        return B_LOWER;        
+    case B_LEFT:
+        return B_UPPER;    
+     default:
+        return 0;
+     }    
+}
+
+void addNode(struct node* list, struct pos position){
+    list->next = (struct node*)malloc(sizeof(struct node));
+    list->next->position = position;
+    list->next->next = NULL;
+}
+
+void solveRandomMouse(struct maze* lab, struct node* solutionList){
+    struct node* currentNode = solutionList;
+    struct pos currentPos = currentNode->position;    
+    struct pos endPos = {lab->rows-1,lab->cols-1};
+    char currentDir = B_RIGHT;
+
+    while(currentPos.row != endPos.row && currentPos.col != endPos.col){        
+        char directions[3];      
+        int dirCount=0;
+
+        //Save possible directions
+        if(lab->matrix[currentPos.row][currentPos.col].barrier && currentDir != 0){
+            directions[dirCount] = currentDir;
+            dirCount++;
+        }
+        if(lab->matrix[currentPos.row][currentPos.col].barrier && leftDirection(currentDir) != 0){
+            directions[dirCount] = leftDirection(currentDir);
+            dirCount++;
+        }
+        if(lab->matrix[currentPos.row][currentPos.col].barrier && rightDirection(currentDir) != 0){
+            directions[dirCount] = rightDirection(currentDir);
+            dirCount++;
+        }
+
+        char dir;
+        if(dirCount != 0){
+            //Select random direction from possible directions
+            dir = directions[rand()%dirCount];
+        }else{
+            dir = oppositeDirection(currentDir); //this may cause the mouse to exit through the entrance.
+        }
+
+
+        struct pos nextPos = neighborPosition(lab, currentPos.row, currentPos.col, dir);
+        addNode(currentNode, nextPos);
+        currentNode = currentNode->next;   
+        currentPos = currentNode->position;         
+    }
+
+
+
+}
+
+
+
+
+
+
+
+
+
 
 //================= DRAW ==================
 
@@ -289,6 +405,8 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
     double strokeWidth = 1.0;
     cairo_set_line_width(cr,strokeWidth);
     cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
+
+    //TODO: Draws repeated walls, must be fixed.
     for (int i = 0; i < rows; i++) {
         for (int j = 0; j < cols; j++) {
             int xCord = j * cellWidth + offsetX + padding/2;
