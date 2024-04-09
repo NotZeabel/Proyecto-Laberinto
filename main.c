@@ -312,15 +312,15 @@ void solveRandomMouse(struct maze* lab, struct node* solutionList){
         int dirCount=0;
 
         //Save possible directions
-        if(lab->matrix[currentPos.row][currentPos.col].barrier && currentDir != 0){
+        if((lab->matrix[currentPos.row][currentPos.col].barrier & currentDir) != 0){
             directions[dirCount] = currentDir;
             dirCount++;
         }
-        if(lab->matrix[currentPos.row][currentPos.col].barrier && leftDirection(currentDir) != 0){
+        if((lab->matrix[currentPos.row][currentPos.col].barrier & leftDirection(currentDir)) != 0){
             directions[dirCount] = leftDirection(currentDir);
             dirCount++;
         }
-        if(lab->matrix[currentPos.row][currentPos.col].barrier && rightDirection(currentDir) != 0){
+        if((lab->matrix[currentPos.row][currentPos.col].barrier & rightDirection(currentDir)) != 0){
             directions[dirCount] = rightDirection(currentDir);
             dirCount++;
         }
@@ -337,11 +337,22 @@ void solveRandomMouse(struct maze* lab, struct node* solutionList){
         struct pos nextPos = neighborPosition(lab, currentPos.row, currentPos.col, dir);
         addNode(currentNode, nextPos);
         currentNode = currentNode->next;   
-        currentPos = currentNode->position;         
+        currentPos = currentNode->position;
+        currentDir = dir;
     }
 
 
 
+}
+
+void printSolution(struct node* solutionList){    
+    struct node* currentNode = solutionList;
+    printf("[");
+    while(currentNode != NULL){
+        printf("(%d, %d),", currentNode->position.row, currentNode->position.col);
+        currentNode = currentNode->next;
+    }
+    printf("]");
 }
 
 
@@ -406,38 +417,97 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
     cairo_set_line_width(cr,strokeWidth);
     cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
 
-    //TODO: Draws repeated walls, must be fixed.
+    //Draw cells    
+    //TODO: Draws repeated walls, must be fixed.    
     for (int i = 0; i < rows; i++) {
         for (int j = 0; j < cols; j++) {
             int xCord = j * cellWidth + offsetX + padding/2;
             int yCord = i * cellHeight + offsetY + padding/2;
-
+            
+            //if cell is out of the view it is not rendered
             if((xCord<0 && xCord+cellWidth<0)  || (xCord>width && xCord+cellWidth>width) ||
                 (yCord<0 && yCord+cellHeight<0) || (yCord>height && yCord+cellHeight>height)){
                 continue;
             }
 
+            //Draw Cell
             if(!((lab.matrix[i][j].barrier & B_RIGHT) > 0)) {
                 cairo_move_to(cr, xCord + cellWidth, yCord);
                 cairo_line_to(cr, xCord + cellWidth, yCord + cellHeight);
             }
-
             if(!((lab.matrix[i][j].barrier & B_LEFT) > 0)) {
                 cairo_move_to(cr, xCord, yCord);
                 cairo_line_to(cr, xCord, yCord + cellHeight);
-            }
-            
+            }            
             if(!((lab.matrix[i][j].barrier & B_LOWER) > 0)) {
                 cairo_move_to(cr, xCord, yCord + cellHeight);
                 cairo_line_to(cr, xCord + cellWidth, yCord + cellHeight);
             }
-
             if(!((lab.matrix[i][j].barrier & B_UPPER) > 0)) {
                 cairo_move_to(cr, xCord, yCord);
                 cairo_line_to(cr, xCord + cellWidth, yCord);
-            }            
+            }                                    
         }
     }
+
+    //Draw Solution
+    if(randomMouseEnable){
+        struct node* currentNode = &randomMouseSolution;
+        char lastDir = B_RIGHT;
+        int track = 2;
+
+        while(currentNode != NULL){                        
+            int xCord = currentNode->position.col * cellWidth + offsetX + padding/2;
+            int yCord = currentNode->position.col * cellHeight + offsetY + padding/2;
+            
+            //if cell is out of the view it is not rendered
+            if((xCord<0 && xCord+cellWidth<0)  || (xCord>width && xCord+cellWidth>width) ||
+                (yCord<0 && yCord+cellHeight<0) || (yCord>height && yCord+cellHeight>height)){
+                currentNode = currentNode->next;
+                continue;
+            }
+            
+
+
+            //Draw Line
+            switch (lastDir){
+                case B_UPPER:
+                    cairo_move_to(cr, xCord + track, yCord);
+                    cairo_line_to(cr, xCord + track, yCord + track);        
+                case B_LOWER:
+                    cairo_move_to(cr, xCord + track, yCord + cellHeight);
+                    cairo_line_to(cr, xCord + track, yCord + track);        
+                    return B_UPPER;
+                case B_RIGHT:        
+                    cairo_move_to(cr, xCord + cellWidth, yCord + track);
+                    cairo_line_to(cr, xCord + track, yCord + track);        
+                    return B_LEFT;        
+                case B_LEFT:
+                    cairo_move_to(cr, xCord, yCord + track);
+                    cairo_line_to(cr, xCord + track, yCord + track);        
+                    return B_RIGHT;    
+            }    
+            /*
+            if(lastDir == B_LEFT ||) {
+                
+            }
+
+
+
+            if(currentNode->next == NULL){
+                break;
+            }
+
+            currentNode->next->position
+
+            
+                */
+            currentNode = currentNode->next;
+            
+                     
+        }       
+    }
+
     cairo_stroke(cr);
 
     return FALSE;
@@ -633,6 +703,11 @@ void generateButton(__attribute__((unused)) GtkWidget *widget,
 
 void solveButton(__attribute__((unused)) GtkWidget *widget, 
                        __attribute__((unused)) gpointer   data){
+    solveRandomMouse(&lab, &randomMouseSolution);
+    printSolution(&randomMouseSolution);
+    randomMouseEnable = TRUE;
+    return;
+    
     GtkWidget *dialogWindow;
     const gchar *message = "Not implemented";    
 
