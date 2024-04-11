@@ -307,7 +307,7 @@ void solveRandomMouse(struct maze* lab, struct node* solutionList){
     struct pos endPos = {lab->rows-1,lab->cols-1};
     char currentDir = B_RIGHT;
 
-    while(currentPos.row != endPos.row && currentPos.col != endPos.col){        
+    while(currentPos.row != endPos.row || currentPos.col != endPos.col){        
         char directions[3];      
         int dirCount=0;
 
