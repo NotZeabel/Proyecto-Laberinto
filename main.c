@@ -295,6 +295,22 @@ char rightDirection(char direction){
      }    
 }
 
+char getDirectionFromPos(struct pos pos1, struct pos pos2){
+    if(pos2.col > pos1.col){
+        return B_RIGHT;
+    }
+    if(pos2.col < pos1.col){
+        return B_LEFT;
+    }
+    if(pos2.row > pos1.row){
+        return B_LOWER;
+    }
+    if(pos2.col > pos1.col){
+        return B_UPPER;
+    }
+    return 0;
+}
+
 void addNode(struct node* list, struct pos position){
     list->next = (struct node*)malloc(sizeof(struct node));
     list->next->position = position;
@@ -449,16 +465,16 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
             }                                    
         }
     }
-
+    
     //Draw Solution
     if(randomMouseEnable){
         struct node* currentNode = &randomMouseSolution;
         char lastDir = B_RIGHT;
-        int track = 2;
+        int track = cellWidth/2;
 
         while(currentNode != NULL){                        
             int xCord = currentNode->position.col * cellWidth + offsetX + padding/2;
-            int yCord = currentNode->position.col * cellHeight + offsetY + padding/2;
+            int yCord = currentNode->position.row * cellHeight + offsetY + padding/2;
             
             //if cell is out of the view it is not rendered
             if((xCord<0 && xCord+cellWidth<0)  || (xCord>width && xCord+cellWidth>width) ||
@@ -467,41 +483,72 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
                 continue;
             }
             
-
+            
 
             //Draw Line
+            //Cairo Lineto is in all cases
             switch (lastDir){
                 case B_UPPER:
+                    cairo_move_to(cr, xCord + track, yCord + cellHeight);
+                    cairo_line_to(cr, xCord + track, yCord + track);                            
+                    break;
+                case B_LOWER:
                     cairo_move_to(cr, xCord + track, yCord);
                     cairo_line_to(cr, xCord + track, yCord + track);        
-                case B_LOWER:
-                    cairo_move_to(cr, xCord + track, yCord + cellHeight);
-                    cairo_line_to(cr, xCord + track, yCord + track);        
-                    return B_UPPER;
-                case B_RIGHT:        
-                    cairo_move_to(cr, xCord + cellWidth, yCord + track);
-                    cairo_line_to(cr, xCord + track, yCord + track);        
-                    return B_LEFT;        
-                case B_LEFT:
+                    break;
+                case B_RIGHT:                                
                     cairo_move_to(cr, xCord, yCord + track);
-                    cairo_line_to(cr, xCord + track, yCord + track);        
-                    return B_RIGHT;    
+                    cairo_line_to(cr, xCord + track, yCord + track);   
+                    break;
+                case B_LEFT:
+                    cairo_move_to(cr, xCord + cellWidth, yCord + track);
+                    cairo_line_to(cr, xCord + track, yCord + track);                       
+                    break;
             }    
+            
+            if(currentNode->next == NULL){
+                break;
+            }
+
+            char nextDir = getDirectionFromPos(currentNode->position, currentNode->next->position);
+            
+            switch (nextDir){
+                case B_UPPER:
+                    cairo_move_to(cr, xCord + track, yCord + track);
+                    cairo_line_to(cr, xCord + track, yCord);                            
+                    break;
+                case B_LOWER:
+                    cairo_move_to(cr, xCord + track, yCord + track);
+                    cairo_line_to(cr, xCord + track, yCord + cellHeight);        
+                    break;
+                case B_RIGHT:                                
+                    cairo_move_to(cr, xCord + track, yCord + track);
+                    cairo_line_to(cr, xCord + cellWidth, yCord + track);   
+                    break;
+                case B_LEFT:
+                    cairo_move_to(cr, xCord + track, yCord + track);
+                    cairo_line_to(cr, xCord, yCord + track);                       
+                    break;
+            }    
+            
+            
             /*
+
+
+
             if(lastDir == B_LEFT ||) {
                 
             }
 
 
 
-            if(currentNode->next == NULL){
-                break;
-            }
+            
 
             currentNode->next->position
 
             
                 */
+            lastDir = nextDir;
             currentNode = currentNode->next;
             
                      
