@@ -505,13 +505,17 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
                     cairo_line_to(cr, xCord + track, yCord + track);                       
                     break;
             }    
-            
-            if(currentNode->next == NULL){
-                break;
+                        
+            char nextDir = B_RIGHT;
+
+            if(currentNode->next != NULL){                
+                nextDir = getDirectionFromPos(currentNode->position, currentNode->next->position);    
             }
 
-            char nextDir = getDirectionFromPos(currentNode->position, currentNode->next->position);
-            
+            if(nextDir == oppositeDirection(lastDir)){
+                //track +=1;  going back, doesnt work.
+            }
+
             switch (nextDir){
                 case B_UPPER:
                     cairo_move_to(cr, xCord + track, yCord + track);
@@ -530,27 +534,9 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
                     cairo_line_to(cr, xCord, yCord + track);                       
                     break;
             }    
-            
-            
-            /*
-
-
-
-            if(lastDir == B_LEFT ||) {
-                
-            }
-
-
-
-            
-
-            currentNode->next->position
-
-            
-                */
+                        
             lastDir = nextDir;
             currentNode = currentNode->next;
-            
                      
         }       
     }
