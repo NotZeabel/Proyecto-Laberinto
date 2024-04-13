@@ -79,6 +79,21 @@ void freeLabyrinth(struct maze* lab){
     }    
 }
 
+void freeList(struct node* list){
+    struct node* currentNode = list->next;
+    while(currentNode != NULL){
+        struct node* temp = currentNode->next;
+        free(currentNode);
+        currentNode = temp;
+    }
+    list->next = NULL;
+}
+
+void freeMemory(){
+    freeLabyrinth(&lab);
+    freeList(&randomMouseSolution);
+}
+
 void printLabyrinth(struct maze* lab){
     for (int j = 0; j < lab->cols; j++){            
         printf("XXXX");        
@@ -653,7 +668,7 @@ void loadFile(char* path){
     }
 
     //Free used memory
-    freeLabyrinth(&lab);
+    freeMemory();
 
     //Read rows and cols 
     fread(&(lab.rows), sizeof(int), 1, file);
@@ -718,7 +733,7 @@ void generateButton(__attribute__((unused)) GtkWidget *widget,
         int rows = atoi(rowsText);
         int cols = atoi(colsText);    
         if(0<rows && rows<=2048 && 0<cols && cols<=2048){
-            freeLabyrinth(&lab);
+            freeMemory();
             lab.rows = rows;
             lab.cols = cols;
             generateLabyrinth(&lab);    
