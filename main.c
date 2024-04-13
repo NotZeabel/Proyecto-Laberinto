@@ -331,6 +331,9 @@ void generateLabyrinth(struct maze* lab){
 
 //Solutions
 
+void disableSolutions(){
+    randomMouseEnable = FALSE;
+}
 
 void solveRandomMouse(struct maze* lab, struct node* solutionList){
     struct node* currentNode = solutionList;
@@ -694,6 +697,7 @@ void loadFile(char* path){
     //Assign Initial Zoom
     zoom = 1;
     
+    disableSolutions();
     enableSave();
     fclose(file);   
 }
@@ -737,6 +741,7 @@ void generateButton(__attribute__((unused)) GtkWidget *widget,
             lab.rows = rows;
             lab.cols = cols;
             generateLabyrinth(&lab);    
+            disableSolutions();
             enableSave();
         }else{
             GtkWidget *dialogWindow;
@@ -753,6 +758,9 @@ void generateButton(__attribute__((unused)) GtkWidget *widget,
 
 void solveButton(__attribute__((unused)) GtkWidget *widget, 
                        __attribute__((unused)) gpointer   data){
+    if(randomMouseEnable){
+        freeList(&randomMouseSolution);
+    }    
     solveRandomMouse(&lab, &randomMouseSolution);
     printSolution(&randomMouseSolution);
     randomMouseEnable = TRUE;
