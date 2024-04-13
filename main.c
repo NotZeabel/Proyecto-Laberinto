@@ -27,32 +27,36 @@ gdouble initialX, initialY, previousX, previousY, offsetX, offsetY = 0;
 
 
 //TODO: make all the structs typedef
+//Labirynth
 struct cell{
     int state; 
     char barrier;
 };
-
 struct maze{
     struct cell** matrix;
     int rows;
     int cols;
 };
-
 struct pos{
     int row;
     int col;
 };
 
-struct maze lab = {NULL, 1, 1};
 
-
-//Solutions
+//LinkedList
 struct node{
     struct node* next;    
     struct pos position;
 };
+void addNode(struct node* list, struct pos position){
+    list->next = (struct node*)malloc(sizeof(struct node));
+    list->next->position = position;
+    list->next->next = NULL;
+}
 
 
+struct maze lab = {NULL, 1, 1};
+//Solutions
 bool randomMouseEnable = false;
 const struct pos start = {0,0};
 struct node randomMouseSolution = {NULL, start};
@@ -64,6 +68,7 @@ struct node randomMouseSolution = {NULL, start};
 
 
 //================= LOGIC ==================
+
 
 void freeLabyrinth(struct maze* lab){
     if(lab->matrix != NULL){
@@ -114,6 +119,52 @@ char oppositeDirection(char direction){
      default:
         return 0;
      }    
+}
+
+char leftDirection(char direction){
+    switch (direction){
+     case B_UPPER:
+        return B_LEFT;        
+    case B_LOWER:
+        return B_RIGHT;
+    case B_RIGHT:        
+        return B_UPPER;        
+    case B_LEFT:
+        return B_LOWER;    
+     default:
+        return 0;
+     }    
+}
+
+char rightDirection(char direction){
+    switch (direction){
+     case B_UPPER:
+        return B_RIGHT;        
+    case B_LOWER:
+        return B_LEFT;
+    case B_RIGHT:        
+        return B_LOWER;        
+    case B_LEFT:
+        return B_UPPER;    
+     default:
+        return 0;
+     }    
+}
+
+char getDirectionFromPos(struct pos pos1, struct pos pos2){
+    if(pos2.col > pos1.col){
+        return B_RIGHT;
+    }
+    if(pos2.col < pos1.col){
+        return B_LEFT;
+    }
+    if(pos2.row > pos1.row){
+        return B_LOWER;
+    }
+    if(pos2.col > pos1.col){
+        return B_UPPER;
+    }
+    return 0;
 }
 
 bool hasNeighbor(struct maze* lab, int row, int col, char direction){
@@ -265,57 +316,6 @@ void generateLabyrinth(struct maze* lab){
 
 //Solutions
 
-char leftDirection(char direction){
-    switch (direction){
-     case B_UPPER:
-        return B_LEFT;        
-    case B_LOWER:
-        return B_RIGHT;
-    case B_RIGHT:        
-        return B_UPPER;        
-    case B_LEFT:
-        return B_LOWER;    
-     default:
-        return 0;
-     }    
-}
-
-char rightDirection(char direction){
-    switch (direction){
-     case B_UPPER:
-        return B_RIGHT;        
-    case B_LOWER:
-        return B_LEFT;
-    case B_RIGHT:        
-        return B_LOWER;        
-    case B_LEFT:
-        return B_UPPER;    
-     default:
-        return 0;
-     }    
-}
-
-char getDirectionFromPos(struct pos pos1, struct pos pos2){
-    if(pos2.col > pos1.col){
-        return B_RIGHT;
-    }
-    if(pos2.col < pos1.col){
-        return B_LEFT;
-    }
-    if(pos2.row > pos1.row){
-        return B_LOWER;
-    }
-    if(pos2.col > pos1.col){
-        return B_UPPER;
-    }
-    return 0;
-}
-
-void addNode(struct node* list, struct pos position){
-    list->next = (struct node*)malloc(sizeof(struct node));
-    list->next->position = position;
-    list->next->next = NULL;
-}
 
 void solveRandomMouse(struct maze* lab, struct node* solutionList){
     struct node* currentNode = solutionList;
@@ -360,6 +360,8 @@ void solveRandomMouse(struct maze* lab, struct node* solutionList){
 
 
 }
+
+
 
 void printSolution(struct node* solutionList){    
     struct node* currentNode = solutionList;
