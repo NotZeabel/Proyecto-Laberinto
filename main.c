@@ -62,7 +62,8 @@ bool randomMouseEnable = false;
 struct node randomMouseSolution = {NULL, start};
 bool leftHandEnable = false;
 struct node leftHandSolution = {NULL, start};
-
+bool rightHandEnable = false;
+struct node rightHandSolution = {NULL, start};
 
 
 
@@ -93,8 +94,9 @@ void freeList(struct node* list){
 
 void freeMemory(){
     freeLabyrinth(&lab);
-    freeList(&randomMouseSolution);
-    freeList(&leftHandSolution);
+    if(randomMouseEnable) freeList(&randomMouseSolution);
+    if(leftHandEnable) freeList(&leftHandSolution);
+    if(rightHandEnable) freeList(&rightHandSolution);
 }
 
 void printLabyrinth(struct maze* lab){
@@ -379,7 +381,7 @@ void solveRandomMouse(struct maze* lab, struct node* solutionList){
 }
 
 void solveLeftHand(struct maze* lab, struct node* solutionList){
-    struct node* currentNode = solutionList;
+    struct node* currentNode = solutionList; //change later
     struct pos currentPos = currentNode->position;    
     struct pos endPos = {lab->rows-1,lab->cols-1};
     char currentDir = B_RIGHT; 
@@ -402,8 +404,34 @@ void solveLeftHand(struct maze* lab, struct node* solutionList){
         currentNode = currentNode->next;   
         currentPos = currentNode->position;    
         currentDir = dir;                
-    }
-    
+    }    
+}
+
+void solveRightHand(struct maze* lab, struct node* solutionList){
+    struct node* currentNode = solutionList; // change later
+    struct pos currentPos = currentNode->position;    
+    struct pos endPos = {lab->rows-1,lab->cols-1};
+    char currentDir = B_RIGHT; 
+
+    while(currentPos.row != endPos.row || currentPos.col != endPos.col){        
+        
+        char dir = 0;
+        if((lab->matrix[currentPos.row][currentPos.col].barrier & rightDirection(currentDir)) != 0){
+            dir = rightDirection(currentDir);
+        } else if((lab->matrix[currentPos.row][currentPos.col].barrier & currentDir) != 0){
+            dir = currentDir;
+        } else if((lab->matrix[currentPos.row][currentPos.col].barrier & leftDirection(currentDir)) != 0){
+            dir = leftDirection(currentDir);
+        } else{
+            dir = oppositeDirection(currentDir);
+        }                
+
+        struct pos nextPos = neighborPosition(lab, currentPos.row, currentPos.col, dir); //this method can be a parameter of addNode
+        addNode(currentNode, nextPos);
+        currentNode = currentNode->next;   
+        currentPos = currentNode->position;    
+        currentDir = dir;                
+    }    
 }
 
 
@@ -528,12 +556,10 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
                 (yCord<0 && yCord+cellHeight<0) || (yCord>height && yCord+cellHeight>height)){
                 currentNode = currentNode->next;
                 continue;
-            }
-            
-            
+            }            
 
             //Draw Line
-            //Cairo Lineto is in all cases
+            //Cairo Lineto is in all cases, simplify 
             switch (lastDir){
                 case B_UPPER:
                     cairo_move_to(cr, xCord + track, yCord + cellHeight);
@@ -789,9 +815,12 @@ void solveButton(__attribute__((unused)) GtkWidget *widget,
         freeList(&randomMouseSolution);
     }    
     //solveRandomMouse(&lab, &randomMouseSolution);
-    solveLeftHand(&lab, &randomMouseSolution);
+    //solveLeftHand(&lab, &randomMouseSolution);
+    solveRightHand(&lab, &randomMouseSolution);
     printSolution(&randomMouseSolution);
     randomMouseEnable = TRUE;
+    leftHandEnable = TRUE;
+    rightHandEnable = TRUE;
     return;
     
     GtkWidget *dialogWindow;
