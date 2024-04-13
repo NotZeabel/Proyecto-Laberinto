@@ -57,9 +57,11 @@ void addNode(struct node* list, struct pos position){
 
 struct maze lab = {NULL, 1, 1};
 //Solutions
-bool randomMouseEnable = false;
 const struct pos start = {0,0};
+bool randomMouseEnable = false;
 struct node randomMouseSolution = {NULL, start};
+bool leftHandEnable = false;
+struct node leftHandSolution = {NULL, start};
 
 
 
@@ -92,6 +94,7 @@ void freeList(struct node* list){
 void freeMemory(){
     freeLabyrinth(&lab);
     freeList(&randomMouseSolution);
+    freeList(&leftHandSolution);
 }
 
 void printLabyrinth(struct maze* lab){
@@ -367,16 +370,40 @@ void solveRandomMouse(struct maze* lab, struct node* solutionList){
             dir = oppositeDirection(currentDir); //this may cause the mouse to exit through the entrance.
         }
 
-
         struct pos nextPos = neighborPosition(lab, currentPos.row, currentPos.col, dir);
         addNode(currentNode, nextPos);
         currentNode = currentNode->next;   
         currentPos = currentNode->position;
         currentDir = dir;
     }
+}
 
+void solveLeftHand(struct maze* lab, struct node* solutionList){
+    struct node* currentNode = solutionList;
+    struct pos currentPos = currentNode->position;    
+    struct pos endPos = {lab->rows-1,lab->cols-1};
+    char currentDir = B_RIGHT; 
 
+    while(currentPos.row != endPos.row || currentPos.col != endPos.col){        
+        
+        char dir = 0;
+        if((lab->matrix[currentPos.row][currentPos.col].barrier & leftDirection(currentDir)) != 0){
+            dir = leftDirection(currentDir);
+        } else if((lab->matrix[currentPos.row][currentPos.col].barrier & currentDir) != 0){
+            dir = currentDir;
+        } else if((lab->matrix[currentPos.row][currentPos.col].barrier & rightDirection(currentDir)) != 0){
+            dir = rightDirection(currentDir);
+        } else{
+            dir = oppositeDirection(currentDir);
+        }                
 
+        struct pos nextPos = neighborPosition(lab, currentPos.row, currentPos.col, dir); //this method can be a parameter of addNode
+        addNode(currentNode, nextPos);
+        currentNode = currentNode->next;   
+        currentPos = currentNode->position;    
+        currentDir = dir;                
+    }
+    
 }
 
 
@@ -761,7 +788,8 @@ void solveButton(__attribute__((unused)) GtkWidget *widget,
     if(randomMouseEnable){
         freeList(&randomMouseSolution);
     }    
-    solveRandomMouse(&lab, &randomMouseSolution);
+    //solveRandomMouse(&lab, &randomMouseSolution);
+    solveLeftHand(&lab, &randomMouseSolution);
     printSolution(&randomMouseSolution);
     randomMouseEnable = TRUE;
     return;
