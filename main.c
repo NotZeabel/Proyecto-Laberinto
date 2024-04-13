@@ -24,6 +24,11 @@ gdouble initialX, initialY, previousX, previousY, offsetX, offsetY = 0;
 #define B_LOWER 0b0100
 #define B_LEFT 0b1000
 
+//Tremaux
+#define UNEXPLORED 0
+#define EXPLORED 1
+#define F_EXPLORED 2
+
 
 
 //TODO: make all the structs typedef
@@ -31,6 +36,7 @@ gdouble initialX, initialY, previousX, previousY, offsetX, offsetY = 0;
 struct cell{
     int state; 
     char barrier;
+    int visited;
 };
 struct maze{
     struct cell** matrix;
@@ -57,9 +63,10 @@ void addNode(struct node* list, struct pos position){
 
 struct maze lab = {NULL, 1, 1};
 //Solutions
-bool randomMouseEnable = false;
-const struct pos start = {0,0};
-struct node randomMouseSolution = {NULL, start};
+bool randomMouseEnable = true;
+//FIX LATER
+struct node randomMouseSolution = {NULL, {0, 0}};
+struct node tremauxSolution = {NULL, {0, 0}};
 
 
 
@@ -68,7 +75,6 @@ struct node randomMouseSolution = {NULL, start};
 
 
 //================= LOGIC ==================
-
 
 void freeLabyrinth(struct maze* lab){
     if(lab->matrix != NULL){
@@ -374,11 +380,62 @@ void solveRandomMouse(struct maze* lab, struct node* solutionList){
         currentPos = currentNode->position;
         currentDir = dir;
     }
-
-
-
 }
 
+void solveTremaux(struct maze* lab, struct node* solutionList) {
+    //Initialization
+    struct pos start = {0, 0};
+    struct pos end = {lab->rows - 1, lab->cols - 1};
+    struct pos stack[lab->rows * lab->cols];
+    int top = -1;
+    stack[++top] = start;
+    lab->matrix[start.row][start.col].visited = EXPLORED;
+
+    //HEAD NODE
+    struct node* currentNode = solutionList;
+    currentNode->position = start;
+    currentNode->next = NULL;
+
+    //Direction options
+    int dRow[] = {-1, 0, 1, 0};
+    int dCol[] = {0, 1, 0, -1};
+    char directionBits[] = {B_UPPER, B_RIGHT, B_LOWER, B_LEFT};
+
+    //NOW WE SOLVE THIS SHI🗣🔥🔥🔥🔥
+    while (top >= 0) {
+        struct pos current = stack[top];
+
+        if (current.row == end.row && current.col == end.col) {
+            //WE DONE
+            return;
+        }
+
+
+        for (int i = 0; i < 4; i++) {
+            int newRow = current.row + dRow[i];
+            int newCol = current.col + dCol[i];
+            char direction = directionBits[i];
+
+            //Check barrier or out of bounds
+            if (newRow >= 0 && newRow < lab->rows && newCol >= 0 && newCol < lab->cols &&
+                !(lab->matrix[current.row][current.col].barrier & direction)) {
+                
+                if (lab->matrix[newRow][newCol].visited == UNEXPLORED) {
+                    lab->matrix[newRow][newCol].visited = EXPLORED;
+                    struct pos newPos = {newRow, newCol};
+                    addNode(currentNode, newPos);
+                    currentNode = currentNode->next;
+                    stack[++top] = newPos;
+                    break;
+                } else if (lab->matrix[newRow][newCol].visited == EXPLORED) {
+                    lab->matrix[current.row][current.col].visited = F_EXPLORED;
+                    top--; //Pop current from stack (kinda)
+                    break;
+                }
+            }
+        }
+    }
+}
 
 
 void printSolution(struct node* solutionList){    
@@ -488,7 +545,7 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
     
     //Draw Solution
     if(randomMouseEnable){
-        struct node* currentNode = &randomMouseSolution;
+        struct node* currentNode = &tremauxSolution;
         char lastDir = B_RIGHT;
         int track = cellWidth/2;
 
@@ -759,10 +816,10 @@ void generateButton(__attribute__((unused)) GtkWidget *widget,
 void solveButton(__attribute__((unused)) GtkWidget *widget, 
                        __attribute__((unused)) gpointer   data){
     if(randomMouseEnable){
-        freeList(&randomMouseSolution);
-    }    
-    solveRandomMouse(&lab, &randomMouseSolution);
-    printSolution(&randomMouseSolution);
+        freeList(&tremauxSolution);
+    }
+    solveRandomMouse(&lab, &tremauxSolution);
+    printSolution(&tremauxSolution);
     randomMouseEnable = TRUE;
     return;
     
