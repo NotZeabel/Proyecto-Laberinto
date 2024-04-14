@@ -187,7 +187,7 @@ char getDirectionFromPos(struct pos pos1, struct pos pos2){
     if(pos2.row > pos1.row){
         return B_LOWER;
     }
-    if(pos2.col > pos1.col){
+    if(pos2.row < pos1.row){
         return B_UPPER;
     }
     return 0;
@@ -343,13 +343,17 @@ void generateLabyrinth(struct maze* lab){
 //Solutions
 
 void disableSolutions(){
-    randomMouseEnable = FALSE;
+    randomMouseEnable = false;
+    leftHandEnable = false;
+    rightHandEnable = false;
+    pledgeEnable = false;
 }
 
 void solveRandomMouse(struct maze* lab, struct node* solutionList){
     struct node* currentNode = solutionList;
     struct pos currentPos = currentNode->position;    
     struct pos endPos = {lab->rows-1,lab->cols-1};
+    lab->matrix[0][0].barrier = lab->matrix[0][0].barrier & ~(B_LEFT); //Insert wall in entrance
     char currentDir = B_RIGHT;
 
     while(currentPos.row != endPos.row || currentPos.col != endPos.col){        
@@ -375,7 +379,7 @@ void solveRandomMouse(struct maze* lab, struct node* solutionList){
             //Select random direction from possible directions
             dir = directions[rand()%dirCount];
         }else{
-            dir = oppositeDirection(currentDir); //this may cause the mouse to exit through the entrance.
+            dir = oppositeDirection(currentDir);
         }
 
         struct pos nextPos = neighborPosition(lab, currentPos.row, currentPos.col, dir);
@@ -383,11 +387,18 @@ void solveRandomMouse(struct maze* lab, struct node* solutionList){
         currentNode = currentNode->next;   
         currentPos = currentNode->position;
         currentDir = dir;
+
+        //Draw current solution
+        if(!solving) return;
+        gtk_widget_queue_draw(drawArea);
+        while(gtk_events_pending()) gtk_main_iteration();
+        usleep(sleepTime);        
     }
+    lab->matrix[0][0].barrier = lab->matrix[0][0].barrier | B_LEFT; //Remove wall in entrance
 }
 
 void solveLeftHand(struct maze* lab, struct node* solutionList){
-    struct node* currentNode = solutionList; //change later
+    struct node* currentNode = solutionList; 
     struct pos currentPos = currentNode->position;    
     struct pos endPos = {lab->rows-1,lab->cols-1};
     char currentDir = B_RIGHT; 
@@ -409,12 +420,18 @@ void solveLeftHand(struct maze* lab, struct node* solutionList){
         addNode(currentNode, nextPos);
         currentNode = currentNode->next;   
         currentPos = currentNode->position;    
-        currentDir = dir;                
+        currentDir = dir;    
+
+        //Draw current solution
+        if(!solving) return;
+        gtk_widget_queue_draw(drawArea);
+        while(gtk_events_pending()) gtk_main_iteration();
+        usleep(sleepTime);                    
     }    
 }
 
 void solveRightHand(struct maze* lab, struct node* solutionList){
-    struct node* currentNode = solutionList; // change later
+    struct node* currentNode = solutionList;
     struct pos currentPos = currentNode->position;    
     struct pos endPos = {lab->rows-1,lab->cols-1};
     char currentDir = B_RIGHT; 
@@ -436,12 +453,18 @@ void solveRightHand(struct maze* lab, struct node* solutionList){
         addNode(currentNode, nextPos);
         currentNode = currentNode->next;   
         currentPos = currentNode->position;    
-        currentDir = dir;                
+        currentDir = dir;     
+
+        //Draw current solution
+        if(!solving) return;
+        gtk_widget_queue_draw(drawArea);
+        while(gtk_events_pending()) gtk_main_iteration();
+        usleep(sleepTime);                   
     }    
 }
 
 void solvePledge(struct maze* lab, struct node* solutionList){
-    struct node* currentNode = solutionList; // change later
+    struct node* currentNode = solutionList; 
     struct pos currentPos = currentNode->position;    
     struct pos endPos = {lab->rows-1,lab->cols-1};
     lab->matrix[0][0].barrier = lab->matrix[0][0].barrier & ~(B_LEFT); //Insert wall in entrance
@@ -485,10 +508,10 @@ void solvePledge(struct maze* lab, struct node* solutionList){
         currentDir = dir;       
         
         //Draw current solution
+        if(!solving) return;
         gtk_widget_queue_draw(drawArea);
         while(gtk_events_pending()) gtk_main_iteration();
-        usleep(sleepTime);
-        if(!solving) return;
+        usleep(sleepTime);        
     }    
     lab->matrix[0][0].barrier = lab->matrix[0][0].barrier | B_LEFT; //Remove wall in entrance
 }
@@ -672,8 +695,12 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
         }
     }
     
-    //Draw Solution
+    //Draw Solutions
+    //TODO draw each solution with a different color
     if(randomMouseEnable) drawSolution(cr, &randomMouseSolution, cellWidth, cellHeight, width, height, padding);
+    if(leftHandEnable) drawSolution(cr, &leftHandSolution, cellWidth, cellHeight, width, height, padding);
+    if(rightHandEnable) drawSolution(cr, &rightHandSolution, cellWidth, cellHeight, width, height, padding);
+    if(pledgeEnable) drawSolution(cr, &pledgeSolution, cellWidth, cellHeight, width, height, padding);
 
     cairo_stroke(cr);
 
@@ -875,22 +902,28 @@ void generateButton(__attribute__((unused)) GtkWidget *widget,
 
 void solveButton(__attribute__((unused)) GtkWidget *widget, 
                        __attribute__((unused)) gpointer   data){
-    if(solving){ solving = false; return;}      
+    if(solving){ solving = false; return;}  
+
+    //Test -- 
+    randomMouseEnable = false;
+    leftHandEnable = true;
+    rightHandEnable = true;
+    pledgeEnable = false; 
+    // -- 
+
+    if(randomMouseEnable) freeList(&randomMouseSolution);
+    if(leftHandEnable) freeList(&leftHandSolution);
+    if(rightHandEnable) freeList(&rightHandSolution);
+    if(pledgeEnable) freeList(&pledgeSolution);    
+
     sleepTime = 7000000/(lab.rows * lab.cols);
-    if(randomMouseEnable){
-        freeList(&randomMouseSolution);
-    }    
     solving = TRUE;
-    //solveRandomMouse(&lab, &randomMouseSolution);
-    //solveLeftHand(&lab, &randomMouseSolution);
-    //solveRightHand(&lab, &randomMouseSolution);
-    randomMouseEnable = TRUE;
-    solvePledge(&lab, &randomMouseSolution);
+    if(randomMouseEnable) solveRandomMouse(&lab, &randomMouseSolution);
+    if(leftHandEnable) solveLeftHand(&lab, &leftHandSolution);
+    if(rightHandEnable) solveRightHand(&lab, &rightHandSolution);
+    if(pledgeEnable) solvePledge(&lab, &pledgeSolution);    
     solving=FALSE;
-    printSolution(&randomMouseSolution);    
-    leftHandEnable = TRUE;
-    rightHandEnable = TRUE;
-    pledgeEnable = TRUE;
+    printSolution(&randomMouseSolution);        
     gtk_widget_queue_draw(drawArea);
 
     return;
