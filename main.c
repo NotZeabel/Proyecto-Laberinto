@@ -329,8 +329,8 @@ void generateLabyrinth(struct maze* lab){
     }
     free(frontiers);
     
-    lab->matrix[0][0].barrier = lab->matrix[0][0].barrier ^ B_LEFT;
-    lab->matrix[lab->rows-1][lab->cols-1].barrier = lab->matrix[lab->rows-1][lab->cols-1].barrier ^ B_RIGHT;    
+    lab->matrix[0][0].barrier = lab->matrix[0][0].barrier | B_LEFT;
+    lab->matrix[lab->rows-1][lab->cols-1].barrier = lab->matrix[lab->rows-1][lab->cols-1].barrier | B_RIGHT;        
     zoom = 1;
 }
 
@@ -440,6 +440,7 @@ void solvePledge(struct maze* lab, struct node* solutionList){
     struct node* currentNode = solutionList; // change later
     struct pos currentPos = currentNode->position;    
     struct pos endPos = {lab->rows-1,lab->cols-1};
+    lab->matrix[0][0].barrier = lab->matrix[0][0].barrier & ~(B_LEFT); //Insert wall in entrance
     char currentDir = B_RIGHT; 
     bool handOnWall = FALSE;
     int angle = 0;
@@ -449,22 +450,25 @@ void solvePledge(struct maze* lab, struct node* solutionList){
         
         if((lab->matrix[currentPos.row][currentPos.col].barrier & B_RIGHT) != 0 && !handOnWall){
             dir = B_RIGHT;
-        }else{  
+        }else{          
+            if(!handOnWall){
+                currentDir = rightDirection(currentDir);
+                angle -= 90;    
+            }
             handOnWall = TRUE;
-    
-            if((lab->matrix[currentPos.row][currentPos.col].barrier & rightDirection(currentDir)) != 0){
-                dir = rightDirection(currentDir);
+            if((lab->matrix[currentPos.row][currentPos.col].barrier & leftDirection(currentDir)) != 0){
+                dir = leftDirection(currentDir);
                 angle += 90;
             } else if((lab->matrix[currentPos.row][currentPos.col].barrier & currentDir) != 0){
                 dir = currentDir;
-            } else if((lab->matrix[currentPos.row][currentPos.col].barrier & leftDirection(currentDir)) != 0){
-                dir = leftDirection(currentDir);
+            } else if((lab->matrix[currentPos.row][currentPos.col].barrier & rightDirection(currentDir)) != 0){
+                dir = rightDirection(currentDir);
                 angle -= 90;
             } else{
                 dir = oppositeDirection(currentDir);
-                angle += 180;
+                angle -= 180;
             }               
-
+            printf("%d\n" , angle);
             if(angle == 0){
                 handOnWall = FALSE;
             }            
@@ -476,6 +480,7 @@ void solvePledge(struct maze* lab, struct node* solutionList){
         currentPos = currentNode->position;    
         currentDir = dir;       
     }    
+    lab->matrix[0][0].barrier = lab->matrix[0][0].barrier | B_LEFT; //Remove wall in entrance
 }
 
 
