@@ -64,7 +64,8 @@ bool leftHandEnable = false;
 struct node leftHandSolution = {NULL, start};
 bool rightHandEnable = false;
 struct node rightHandSolution = {NULL, start};
-
+bool pledgeEnable = false;
+struct node pledgeSolution = {NULL, start};
 
 
 
@@ -97,6 +98,7 @@ void freeMemory(){
     if(randomMouseEnable) freeList(&randomMouseSolution);
     if(leftHandEnable) freeList(&leftHandSolution);
     if(rightHandEnable) freeList(&rightHandSolution);
+    if(pledgeEnable) freeList(&pledgeSolution);
 }
 
 void printLabyrinth(struct maze* lab){
@@ -434,6 +436,47 @@ void solveRightHand(struct maze* lab, struct node* solutionList){
     }    
 }
 
+void solvePledge(struct maze* lab, struct node* solutionList){
+    struct node* currentNode = solutionList; // change later
+    struct pos currentPos = currentNode->position;    
+    struct pos endPos = {lab->rows-1,lab->cols-1};
+    char currentDir = B_RIGHT; 
+    bool handOnWall = FALSE;
+    int angle = 0;
+
+    while(currentPos.row != endPos.row || currentPos.col != endPos.col){        
+        char dir = 0;
+        
+        if((lab->matrix[currentPos.row][currentPos.col].barrier & B_RIGHT) != 0 && !handOnWall){
+            dir = B_RIGHT;
+        }else{  
+            handOnWall = TRUE;
+    
+            if((lab->matrix[currentPos.row][currentPos.col].barrier & rightDirection(currentDir)) != 0){
+                dir = rightDirection(currentDir);
+                angle += 90;
+            } else if((lab->matrix[currentPos.row][currentPos.col].barrier & currentDir) != 0){
+                dir = currentDir;
+            } else if((lab->matrix[currentPos.row][currentPos.col].barrier & leftDirection(currentDir)) != 0){
+                dir = leftDirection(currentDir);
+                angle -= 90;
+            } else{
+                dir = oppositeDirection(currentDir);
+                angle += 180;
+            }               
+
+            if(angle == 0){
+                handOnWall = FALSE;
+            }            
+        }
+
+        struct pos nextPos = neighborPosition(lab, currentPos.row, currentPos.col, dir); //this method can be a parameter of addNode
+        addNode(currentNode, nextPos);
+        currentNode = currentNode->next;   
+        currentPos = currentNode->position;    
+        currentDir = dir;       
+    }    
+}
 
 
 void printSolution(struct node* solutionList){    
@@ -816,7 +859,8 @@ void solveButton(__attribute__((unused)) GtkWidget *widget,
     }    
     //solveRandomMouse(&lab, &randomMouseSolution);
     //solveLeftHand(&lab, &randomMouseSolution);
-    solveRightHand(&lab, &randomMouseSolution);
+    //solveRightHand(&lab, &randomMouseSolution);
+    solvePledge(&lab, &randomMouseSolution);
     printSolution(&randomMouseSolution);
     randomMouseEnable = TRUE;
     leftHandEnable = TRUE;
