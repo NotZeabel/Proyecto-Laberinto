@@ -680,7 +680,7 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
                 cairo_move_to(cr, xCord + cellWidth, yCord);
                 cairo_line_to(cr, xCord + cellWidth, yCord + cellHeight);
             }
-            if(!((lab.matrix[i][j].barrier & B_LEFT) > 0)) {
+            if(!((lab.matrix[i][j].barrier & B_LEFT) > 0) && j==0) {
                 cairo_move_to(cr, xCord, yCord);
                 cairo_line_to(cr, xCord, yCord + cellHeight);
             }            
@@ -688,7 +688,7 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
                 cairo_move_to(cr, xCord, yCord + cellHeight);
                 cairo_line_to(cr, xCord + cellWidth, yCord + cellHeight);
             }
-            if(!((lab.matrix[i][j].barrier & B_UPPER) > 0)) {
+            if(!((lab.matrix[i][j].barrier & B_UPPER) > 0) && i==0) {
                 cairo_move_to(cr, xCord, yCord);
                 cairo_line_to(cr, xCord + cellWidth, yCord);
             }                                    
