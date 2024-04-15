@@ -2,6 +2,7 @@
 #include <gtk/gtk.h>
 #include <stdbool.h>
 #include <math.h>
+#include <unistd.h>
 
 
 //================= Defintions ==================
@@ -9,9 +10,12 @@
 //UI 
 GtkWidget* window;
 GtkWidget* saveWidget;
+GtkWidget *drawArea;
 double zoom;
 gboolean dragging = FALSE;
 gdouble initialX, initialY, previousX, previousY, offsetX, offsetY = 0;
+bool solving = FALSE;
+int sleepTime = 700000;
 
 
 
@@ -63,12 +67,16 @@ void addNode(struct node* list, struct pos position){
 
 struct maze lab = {NULL, 1, 1};
 //Solutions
-bool randomMouseEnable = true;
-//FIX LATER
-struct node randomMouseSolution = {NULL, {0, 0}};
-struct node tremauxSolution = {NULL, {0, 0}};
-
-
+const struct pos start = {0,0};
+bool randomMouseEnable = false;
+struct node randomMouseSolution = {NULL, start};
+bool leftHandEnable = false;
+struct node leftHandSolution = {NULL, start};
+bool rightHandEnable = false;
+struct node rightHandSolution = {NULL, start};
+bool pledgeEnable = false;
+struct node pledgeSolution = {NULL, start};
+struct node tremauxSolution = {NULL, start};
 
 
 
@@ -97,7 +105,10 @@ void freeList(struct node* list){
 
 void freeMemory(){
     freeLabyrinth(&lab);
-    freeList(&randomMouseSolution);
+    if(randomMouseEnable) freeList(&randomMouseSolution);
+    if(leftHandEnable) freeList(&leftHandSolution);
+    if(rightHandEnable) freeList(&rightHandSolution);
+    if(pledgeEnable) freeList(&pledgeSolution);    
 }
 
 void printLabyrinth(struct maze* lab){
@@ -182,7 +193,7 @@ char getDirectionFromPos(struct pos pos1, struct pos pos2){
     if(pos2.row > pos1.row){
         return B_LOWER;
     }
-    if(pos2.col > pos1.col){
+    if(pos2.row < pos1.row){
         return B_UPPER;
     }
     return 0;
@@ -328,8 +339,8 @@ void generateLabyrinth(struct maze* lab){
     }
     free(frontiers);
     
-    lab->matrix[0][0].barrier = lab->matrix[0][0].barrier ^ B_LEFT;
-    lab->matrix[lab->rows-1][lab->cols-1].barrier = lab->matrix[lab->rows-1][lab->cols-1].barrier ^ B_RIGHT;    
+    lab->matrix[0][0].barrier = lab->matrix[0][0].barrier | B_LEFT;
+    lab->matrix[lab->rows-1][lab->cols-1].barrier = lab->matrix[lab->rows-1][lab->cols-1].barrier | B_RIGHT;        
     zoom = 1;
 }
 
@@ -338,13 +349,17 @@ void generateLabyrinth(struct maze* lab){
 //Solutions
 
 void disableSolutions(){
-    randomMouseEnable = FALSE;
+    randomMouseEnable = false;
+    leftHandEnable = false;
+    rightHandEnable = false;
+    pledgeEnable = false;
 }
 
 void solveRandomMouse(struct maze* lab, struct node* solutionList){
     struct node* currentNode = solutionList;
     struct pos currentPos = currentNode->position;    
     struct pos endPos = {lab->rows-1,lab->cols-1};
+    lab->matrix[0][0].barrier = lab->matrix[0][0].barrier & ~(B_LEFT); //Insert wall in entrance
     char currentDir = B_RIGHT;
 
     while(currentPos.row != endPos.row || currentPos.col != endPos.col){        
@@ -370,16 +385,22 @@ void solveRandomMouse(struct maze* lab, struct node* solutionList){
             //Select random direction from possible directions
             dir = directions[rand()%dirCount];
         }else{
-            dir = oppositeDirection(currentDir); //this may cause the mouse to exit through the entrance.
+            dir = oppositeDirection(currentDir);
         }
-
 
         struct pos nextPos = neighborPosition(lab, currentPos.row, currentPos.col, dir);
         addNode(currentNode, nextPos);
         currentNode = currentNode->next;   
         currentPos = currentNode->position;
         currentDir = dir;
+
+        //Draw current solution
+        if(!solving) return;
+        gtk_widget_queue_draw(drawArea);
+        while(gtk_events_pending()) gtk_main_iteration();
+        usleep(sleepTime);        
     }
+    lab->matrix[0][0].barrier = lab->matrix[0][0].barrier | B_LEFT; //Remove wall in entrance
 }
 
 void solveTremaux(struct maze* lab, struct node* solutionList) {
@@ -437,6 +458,125 @@ void solveTremaux(struct maze* lab, struct node* solutionList) {
     }
 }
 
+void solveLeftHand(struct maze* lab, struct node* solutionList){
+    struct node* currentNode = solutionList; 
+    struct pos currentPos = currentNode->position;    
+    struct pos endPos = {lab->rows-1,lab->cols-1};
+    char currentDir = B_RIGHT; 
+
+    while(currentPos.row != endPos.row || currentPos.col != endPos.col){        
+        
+        char dir = 0;
+        if((lab->matrix[currentPos.row][currentPos.col].barrier & leftDirection(currentDir)) != 0){
+            dir = leftDirection(currentDir);
+        } else if((lab->matrix[currentPos.row][currentPos.col].barrier & currentDir) != 0){
+            dir = currentDir;
+        } else if((lab->matrix[currentPos.row][currentPos.col].barrier & rightDirection(currentDir)) != 0){
+            dir = rightDirection(currentDir);
+        } else{
+            dir = oppositeDirection(currentDir);
+        }                
+
+        struct pos nextPos = neighborPosition(lab, currentPos.row, currentPos.col, dir); //this method can be a parameter of addNode
+        addNode(currentNode, nextPos);
+        currentNode = currentNode->next;   
+        currentPos = currentNode->position;    
+        currentDir = dir;    
+
+        //Draw current solution
+        if(!solving) return;
+        gtk_widget_queue_draw(drawArea);
+        while(gtk_events_pending()) gtk_main_iteration();
+        usleep(sleepTime);                    
+    }    
+}
+
+void solveRightHand(struct maze* lab, struct node* solutionList){
+    struct node* currentNode = solutionList;
+    struct pos currentPos = currentNode->position;    
+    struct pos endPos = {lab->rows-1,lab->cols-1};
+    char currentDir = B_RIGHT; 
+
+    while(currentPos.row != endPos.row || currentPos.col != endPos.col){        
+        
+        char dir = 0;
+        if((lab->matrix[currentPos.row][currentPos.col].barrier & rightDirection(currentDir)) != 0){
+            dir = rightDirection(currentDir);
+        } else if((lab->matrix[currentPos.row][currentPos.col].barrier & currentDir) != 0){
+            dir = currentDir;
+        } else if((lab->matrix[currentPos.row][currentPos.col].barrier & leftDirection(currentDir)) != 0){
+            dir = leftDirection(currentDir);
+        } else{
+            dir = oppositeDirection(currentDir);
+        }                
+
+        struct pos nextPos = neighborPosition(lab, currentPos.row, currentPos.col, dir); //this method can be a parameter of addNode
+        addNode(currentNode, nextPos);
+        currentNode = currentNode->next;   
+        currentPos = currentNode->position;    
+        currentDir = dir;     
+
+        //Draw current solution
+        if(!solving) return;
+        gtk_widget_queue_draw(drawArea);
+        while(gtk_events_pending()) gtk_main_iteration();
+        usleep(sleepTime);                   
+    }    
+}
+
+void solvePledge(struct maze* lab, struct node* solutionList){
+    struct node* currentNode = solutionList; 
+    struct pos currentPos = currentNode->position;    
+    struct pos endPos = {lab->rows-1,lab->cols-1};
+    lab->matrix[0][0].barrier = lab->matrix[0][0].barrier & ~(B_LEFT); //Insert wall in entrance
+    char currentDir = B_RIGHT; 
+    bool handOnWall = FALSE;
+    int angle = 0;
+
+    while(currentPos.row != endPos.row || currentPos.col != endPos.col){        
+        char dir = 0;
+        
+        if((lab->matrix[currentPos.row][currentPos.col].barrier & B_RIGHT) != 0 && !handOnWall){
+            dir = B_RIGHT;
+        }else{          
+            if(!handOnWall){
+                currentDir = rightDirection(currentDir);
+                angle -= 90;    
+            }
+            handOnWall = TRUE;
+            if((lab->matrix[currentPos.row][currentPos.col].barrier & leftDirection(currentDir)) != 0){
+                dir = leftDirection(currentDir);
+                angle += 90;
+            } else if((lab->matrix[currentPos.row][currentPos.col].barrier & currentDir) != 0){
+                dir = currentDir;
+            } else if((lab->matrix[currentPos.row][currentPos.col].barrier & rightDirection(currentDir)) != 0){
+                dir = rightDirection(currentDir);
+                angle -= 90;
+            } else{
+                dir = oppositeDirection(currentDir);
+                angle -= 180;
+            }               
+            printf("%d\n" , angle);
+            if(angle == 0){
+                handOnWall = FALSE;
+            }            
+        }
+
+        struct pos nextPos = neighborPosition(lab, currentPos.row, currentPos.col, dir); //this method can be a parameter of addNode
+        addNode(currentNode, nextPos);
+        currentNode = currentNode->next;   
+        currentPos = currentNode->position;    
+        currentDir = dir;       
+        
+        //Draw current solution
+        if(!solving) return;
+        gtk_widget_queue_draw(drawArea);
+        while(gtk_events_pending()) gtk_main_iteration();
+        usleep(sleepTime);        
+    }    
+    lab->matrix[0][0].barrier = lab->matrix[0][0].barrier | B_LEFT; //Remove wall in entrance
+}
+
 
 void printSolution(struct node* solutionList){    
     struct node* currentNode = solutionList;
@@ -458,6 +598,81 @@ void printSolution(struct node* solutionList){
 
 
 //================= DRAW ==================
+
+void drawSolution(cairo_t *cr, struct node* list, int cellWidth, int cellHeight, int width, int height, int padding){    
+    struct node* currentNode = list;
+    char lastDir = B_RIGHT;
+    int track = cellWidth/2;
+
+    while(currentNode != NULL){                        
+        int xCord = currentNode->position.col * cellWidth + offsetX + padding/2;
+        int yCord = currentNode->position.row * cellHeight + offsetY + padding/2;
+        
+        //if cell is out of the view it is not rendered
+        if((xCord<0 && xCord+cellWidth<0)  || (xCord>width && xCord+cellWidth>width) ||
+            (yCord<0 && yCord+cellHeight<0) || (yCord>height && yCord+cellHeight>height)){
+            currentNode = currentNode->next;
+            continue;
+        }            
+
+        //Draw Line
+        //Cairo Lineto is in all cases, simplify 
+        switch (lastDir){
+            case B_UPPER:
+                cairo_move_to(cr, xCord + track, yCord + cellHeight);
+                cairo_line_to(cr, xCord + track, yCord + track);                            
+                break;
+            case B_LOWER:
+                cairo_move_to(cr, xCord + track, yCord);
+                cairo_line_to(cr, xCord + track, yCord + track);        
+                break;
+            case B_RIGHT:                                
+                cairo_move_to(cr, xCord, yCord + track);
+                cairo_line_to(cr, xCord + track, yCord + track);   
+                break;
+            case B_LEFT:
+                cairo_move_to(cr, xCord + cellWidth, yCord + track);
+                cairo_line_to(cr, xCord + track, yCord + track);                       
+                break;
+        }    
+                    
+        char nextDir = B_RIGHT;
+
+        if(currentNode->next != NULL){                
+            nextDir = getDirectionFromPos(currentNode->position, currentNode->next->position);    
+        }
+
+        if(nextDir == oppositeDirection(lastDir)){
+            //track +=1;  going back, doesnt work.
+        }
+
+        switch (nextDir){
+            case B_UPPER:
+                cairo_move_to(cr, xCord + track, yCord + track);
+                cairo_line_to(cr, xCord + track, yCord);                            
+                break;
+            case B_LOWER:
+                cairo_move_to(cr, xCord + track, yCord + track);
+                cairo_line_to(cr, xCord + track, yCord + cellHeight);        
+                break;
+            case B_RIGHT:                                
+                cairo_move_to(cr, xCord + track, yCord + track);
+                cairo_line_to(cr, xCord + cellWidth, yCord + track);   
+                break;
+            case B_LEFT:
+                cairo_move_to(cr, xCord + track, yCord + track);
+                cairo_line_to(cr, xCord, yCord + track);                       
+                break;
+        }    
+                    
+        lastDir = nextDir;
+        currentNode = currentNode->next;                    
+    }       
+}
+
+
+
+
 
 #define zoomFactor 0.25
 
@@ -481,7 +696,6 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
     cairo_rectangle(cr,0,0,width,height);
     cairo_stroke(cr);
 
-    
 
     //Draw actual labyrinth
     int rows = lab.rows;
@@ -505,7 +719,6 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
     }
     
 
-
     double strokeWidth = 1.0;
     cairo_set_line_width(cr,strokeWidth);
     cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
@@ -528,7 +741,7 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
                 cairo_move_to(cr, xCord + cellWidth, yCord);
                 cairo_line_to(cr, xCord + cellWidth, yCord + cellHeight);
             }
-            if(!((lab.matrix[i][j].barrier & B_LEFT) > 0)) {
+            if(!((lab.matrix[i][j].barrier & B_LEFT) > 0) && j==0) {
                 cairo_move_to(cr, xCord, yCord);
                 cairo_line_to(cr, xCord, yCord + cellHeight);
             }            
@@ -536,92 +749,26 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
                 cairo_move_to(cr, xCord, yCord + cellHeight);
                 cairo_line_to(cr, xCord + cellWidth, yCord + cellHeight);
             }
-            if(!((lab.matrix[i][j].barrier & B_UPPER) > 0)) {
+            if(!((lab.matrix[i][j].barrier & B_UPPER) > 0) && i==0) {
                 cairo_move_to(cr, xCord, yCord);
                 cairo_line_to(cr, xCord + cellWidth, yCord);
             }                                    
         }
     }
     
-    //Draw Solution
-    if(randomMouseEnable){
-        struct node* currentNode = &tremauxSolution;
-        char lastDir = B_RIGHT;
-        int track = cellWidth/2;
-
-        while(currentNode != NULL){                        
-            int xCord = currentNode->position.col * cellWidth + offsetX + padding/2;
-            int yCord = currentNode->position.row * cellHeight + offsetY + padding/2;
-            
-            //if cell is out of the view it is not rendered
-            if((xCord<0 && xCord+cellWidth<0)  || (xCord>width && xCord+cellWidth>width) ||
-                (yCord<0 && yCord+cellHeight<0) || (yCord>height && yCord+cellHeight>height)){
-                currentNode = currentNode->next;
-                continue;
-            }
-            
-            
-
-            //Draw Line
-            //Cairo Lineto is in all cases
-            switch (lastDir){
-                case B_UPPER:
-                    cairo_move_to(cr, xCord + track, yCord + cellHeight);
-                    cairo_line_to(cr, xCord + track, yCord + track);                            
-                    break;
-                case B_LOWER:
-                    cairo_move_to(cr, xCord + track, yCord);
-                    cairo_line_to(cr, xCord + track, yCord + track);        
-                    break;
-                case B_RIGHT:                                
-                    cairo_move_to(cr, xCord, yCord + track);
-                    cairo_line_to(cr, xCord + track, yCord + track);   
-                    break;
-                case B_LEFT:
-                    cairo_move_to(cr, xCord + cellWidth, yCord + track);
-                    cairo_line_to(cr, xCord + track, yCord + track);                       
-                    break;
-            }    
-                        
-            char nextDir = B_RIGHT;
-
-            if(currentNode->next != NULL){                
-                nextDir = getDirectionFromPos(currentNode->position, currentNode->next->position);    
-            }
-
-            if(nextDir == oppositeDirection(lastDir)){
-                //track +=1;  going back, doesnt work.
-            }
-
-            switch (nextDir){
-                case B_UPPER:
-                    cairo_move_to(cr, xCord + track, yCord + track);
-                    cairo_line_to(cr, xCord + track, yCord);                            
-                    break;
-                case B_LOWER:
-                    cairo_move_to(cr, xCord + track, yCord + track);
-                    cairo_line_to(cr, xCord + track, yCord + cellHeight);        
-                    break;
-                case B_RIGHT:                                
-                    cairo_move_to(cr, xCord + track, yCord + track);
-                    cairo_line_to(cr, xCord + cellWidth, yCord + track);   
-                    break;
-                case B_LEFT:
-                    cairo_move_to(cr, xCord + track, yCord + track);
-                    cairo_line_to(cr, xCord, yCord + track);                       
-                    break;
-            }    
-                        
-            lastDir = nextDir;
-            currentNode = currentNode->next;
-                     
-        }       
-    }
+    //Draw Solutions
+    //TODO draw each solution with a different color
+    if(randomMouseEnable) drawSolution(cr, &randomMouseSolution, cellWidth, cellHeight, width, height, padding);
+    if(leftHandEnable) drawSolution(cr, &leftHandSolution, cellWidth, cellHeight, width, height, padding);
+    if(rightHandEnable) drawSolution(cr, &rightHandSolution, cellWidth, cellHeight, width, height, padding);
+    if(pledgeEnable) drawSolution(cr, &pledgeSolution, cellWidth, cellHeight, width, height, padding);
 
     cairo_stroke(cr);
 
     return FALSE;
 }
+
+
 
 //Zoom In/Out
 
@@ -775,6 +922,7 @@ void generateButton(__attribute__((unused)) GtkWidget *widget,
     GtkWidget  *colsInput;
     GtkBuilder *builder;
 
+    solving=false;
     g_return_if_fail (window != NULL);
 
     builder = gtk_builder_new_from_file("inputDialog.glade");
@@ -793,7 +941,7 @@ void generateButton(__attribute__((unused)) GtkWidget *widget,
     if(response == 1){
         int rows = atoi(rowsText);
         int cols = atoi(colsText);    
-        if(0<rows && rows<=2048 && 0<cols && cols<=2048){
+        if(0<rows && rows<=2048 && 0<cols && cols<=2048){            
             freeMemory();
             lab.rows = rows;
             lab.cols = cols;
@@ -815,12 +963,30 @@ void generateButton(__attribute__((unused)) GtkWidget *widget,
 
 void solveButton(__attribute__((unused)) GtkWidget *widget, 
                        __attribute__((unused)) gpointer   data){
-    if(randomMouseEnable){
-        freeList(&tremauxSolution);
-    }
-    solveRandomMouse(&lab, &tremauxSolution);
-    printSolution(&tremauxSolution);
-    randomMouseEnable = TRUE;
+    if(solving){ solving = false; return;}  
+
+    //Test -- 
+    randomMouseEnable = false;
+    leftHandEnable = true;
+    rightHandEnable = true;
+    pledgeEnable = false; 
+    // -- 
+
+    if(randomMouseEnable) freeList(&randomMouseSolution);
+    if(leftHandEnable) freeList(&leftHandSolution);
+    if(rightHandEnable) freeList(&rightHandSolution);
+    if(pledgeEnable) freeList(&pledgeSolution);    
+
+    sleepTime = 7000000/(lab.rows * lab.cols);
+    solving = TRUE;
+    if(randomMouseEnable) solveRandomMouse(&lab, &randomMouseSolution);
+    if(leftHandEnable) solveLeftHand(&lab, &leftHandSolution);
+    if(rightHandEnable) solveRightHand(&lab, &rightHandSolution);
+    if(pledgeEnable) solvePledge(&lab, &pledgeSolution);    
+    solving=FALSE;
+    printSolution(&randomMouseSolution);        
+    gtk_widget_queue_draw(drawArea);
+
     return;
     
     GtkWidget *dialogWindow;
@@ -884,6 +1050,7 @@ void loadButton(GtkWidget *widget, __attribute__((unused)) gpointer   data) {
     GtkFileFilter *filter;
     gint res;
     
+    solving=false;
     dialog = gtk_file_chooser_dialog_new ("Open File",
                                         GTK_WINDOW(window),
                                         action,
@@ -913,13 +1080,15 @@ void loadButton(GtkWidget *widget, __attribute__((unused)) gpointer   data) {
 
 void exitButton(__attribute__((unused)) GtkWidget *widget, 
                        __attribute__((unused)) gpointer   data){
+        solving=FALSE;
         gtk_main_quit();
 }
   
 gboolean windowDelete(__attribute__((unused)) GtkWidget *widget, 
                       __attribute__((unused)) GdkEvent  *event,
                       __attribute__((unused)) gpointer   data){
-    gtk_main_quit();
+    solving=FALSE;
+    gtk_main_quit();    
     return FALSE;
 }
 
@@ -933,7 +1102,7 @@ int main(int argc, char **argv)
     srand(time(NULL));
     GtkBuilder *builder;
     GError *error = NULL;
-    GtkWidget *drawArea;
+    
 
     gtk_init(&argc,&argv);
 
