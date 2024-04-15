@@ -34,7 +34,6 @@ int sleepTime = 700000;
 #define F_EXPLORED 2
 
 
-
 //TODO: make all the structs typedef
 //Labirynth
 struct cell{
@@ -69,14 +68,15 @@ struct maze lab = {NULL, 1, 1};
 //Solutions
 const struct pos start = {0,0};
 bool randomMouseEnable = false;
-struct node randomMouseSolution = {NULL, start};
+struct node randomMouseSolution = {NULL, {0,0}};
 bool leftHandEnable = false;
-struct node leftHandSolution = {NULL, start};
+struct node leftHandSolution = {NULL, {0,0}};
 bool rightHandEnable = false;
-struct node rightHandSolution = {NULL, start};
+struct node rightHandSolution = {NULL, {0,0}};
 bool pledgeEnable = false;
-struct node pledgeSolution = {NULL, start};
-struct node tremauxSolution = {NULL, start};
+struct node pledgeSolution = {NULL, {0,0}};
+bool tremauxEnable = false;
+struct node tremauxSolution = {NULL, {0,0}};
 
 
 
@@ -108,7 +108,8 @@ void freeMemory(){
     if(randomMouseEnable) freeList(&randomMouseSolution);
     if(leftHandEnable) freeList(&leftHandSolution);
     if(rightHandEnable) freeList(&rightHandSolution);
-    if(pledgeEnable) freeList(&pledgeSolution);    
+    if(pledgeEnable) freeList(&pledgeSolution);
+    if(tremauxEnable) freeList(&tremauxSolution);
 }
 
 void printLabyrinth(struct maze* lab){
@@ -353,6 +354,7 @@ void disableSolutions(){
     leftHandEnable = false;
     rightHandEnable = false;
     pledgeEnable = false;
+    tremauxEnable = false;
 }
 
 void solveRandomMouse(struct maze* lab, struct node* solutionList){
@@ -401,61 +403,6 @@ void solveRandomMouse(struct maze* lab, struct node* solutionList){
         usleep(sleepTime);        
     }
     lab->matrix[0][0].barrier = lab->matrix[0][0].barrier | B_LEFT; //Remove wall in entrance
-}
-
-void solveTremaux(struct maze* lab, struct node* solutionList) {
-    //Initialization
-    struct pos start = {0, 0};
-    struct pos end = {lab->rows - 1, lab->cols - 1};
-    struct pos stack[lab->rows * lab->cols];
-    int top = -1;
-    stack[++top] = start;
-    lab->matrix[start.row][start.col].visited = EXPLORED;
-
-    //HEAD NODE
-    struct node* currentNode = solutionList;
-    currentNode->position = start;
-    currentNode->next = NULL;
-
-    //Direction options
-    int dRow[] = {-1, 0, 1, 0};
-    int dCol[] = {0, 1, 0, -1};
-    char directionBits[] = {B_UPPER, B_RIGHT, B_LOWER, B_LEFT};
-
-    //NOW WE SOLVE THIS SHI🗣🔥🔥🔥🔥
-    while (top >= 0) {
-        struct pos current = stack[top];
-
-        if (current.row == end.row && current.col == end.col) {
-            //WE DONE
-            return;
-        }
-
-
-        for (int i = 0; i < 4; i++) {
-            int newRow = current.row + dRow[i];
-            int newCol = current.col + dCol[i];
-            char direction = directionBits[i];
-
-            //Check barrier or out of bounds
-            if (newRow >= 0 && newRow < lab->rows && newCol >= 0 && newCol < lab->cols &&
-                !(lab->matrix[current.row][current.col].barrier & direction)) {
-                
-                if (lab->matrix[newRow][newCol].visited == UNEXPLORED) {
-                    lab->matrix[newRow][newCol].visited = EXPLORED;
-                    struct pos newPos = {newRow, newCol};
-                    addNode(currentNode, newPos);
-                    currentNode = currentNode->next;
-                    stack[++top] = newPos;
-                    break;
-                } else if (lab->matrix[newRow][newCol].visited == EXPLORED) {
-                    lab->matrix[current.row][current.col].visited = F_EXPLORED;
-                    top--; //Pop current from stack (kinda)
-                    break;
-                }
-            }
-        }
-    }
 }
 
 void solveLeftHand(struct maze* lab, struct node* solutionList){
@@ -575,6 +522,67 @@ void solvePledge(struct maze* lab, struct node* solutionList){
         usleep(sleepTime);        
     }    
     lab->matrix[0][0].barrier = lab->matrix[0][0].barrier | B_LEFT; //Remove wall in entrance
+}
+
+void solveTremaux(struct maze* lab, struct node* solutionList) {
+    //Initialization
+    struct pos start = {0, 0};
+    struct pos end = {lab->rows - 1, lab->cols - 1};
+    struct pos stack[lab->rows * lab->cols];
+    int top = -1;
+    stack[++top] = start;
+    lab->matrix[start.row][start.col].visited = EXPLORED;
+
+    //HEAD NODE
+    struct node* currentNode = solutionList;
+    currentNode->position = start;
+    currentNode->next = NULL;
+
+    //Direction options
+    int dRow[] = {-1, 0, 1, 0};
+    int dCol[] = {0, 1, 0, -1};
+    char directionBits[] = {B_UPPER, B_RIGHT, B_LOWER, B_LEFT};
+
+    //NOW WE SOLVE THIS SHI🗣🔥🔥🔥🔥
+    while (top >= 0) {
+        struct pos current = stack[top];
+
+        if (current.row == end.row && current.col == end.col) {
+            //WE DONE
+            return;
+        }
+
+        for (int i = 0; i < 4; i++) {
+            int newRow = current.row + dRow[i];
+            int newCol = current.col + dCol[i];
+            char direction = directionBits[i];
+
+            //Check barrier or out of bounds
+            printf("Check boundaries and barriers\n");
+            if (newRow >= 0 && newRow < lab->rows && newCol >= 0 && newCol < lab->cols &&
+                !(lab->matrix[current.row][current.col].barrier & direction)) {
+                
+                printf("Check UNEXPLORED or EXPLORED\n");
+                if (lab->matrix[newRow][newCol].visited == UNEXPLORED) {
+                    printf("UNEXPLORED LOGIC\n");
+                    lab->matrix[newRow][newCol].visited = EXPLORED;
+                    struct pos newPos = {newRow, newCol};
+                    addNode(currentNode, newPos);
+                    currentNode = currentNode->next;
+                    stack[++top] = newPos;
+                    break;
+                } else if (lab->matrix[newRow][newCol].visited == EXPLORED) {
+                    printf("EXPLORED LOGIC\n");
+                    lab->matrix[current.row][current.col].visited = F_EXPLORED;
+                    top--; //Pop current from stack (kinda)
+                    break;
+                }
+            }
+        }
+
+        /* printf("THERE WAS A HUGE FUCKING PROBLEM NGL\n");
+        return; */
+    }
 }
 
 
@@ -755,13 +763,17 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
             }                                    
         }
     }
+
+    cairo_stroke(cr);
     
     //Draw Solutions
     //TODO draw each solution with a different color
+    cairo_set_source_rgb(cr, 0.0, 1.0, 0.0);
     if(randomMouseEnable) drawSolution(cr, &randomMouseSolution, cellWidth, cellHeight, width, height, padding);
     if(leftHandEnable) drawSolution(cr, &leftHandSolution, cellWidth, cellHeight, width, height, padding);
     if(rightHandEnable) drawSolution(cr, &rightHandSolution, cellWidth, cellHeight, width, height, padding);
     if(pledgeEnable) drawSolution(cr, &pledgeSolution, cellWidth, cellHeight, width, height, padding);
+    if(tremauxEnable) drawSolution(cr, &tremauxSolution, cellWidth, cellHeight, width, height, padding);
 
     cairo_stroke(cr);
 
@@ -968,23 +980,26 @@ void solveButton(__attribute__((unused)) GtkWidget *widget,
     //Test -- 
     randomMouseEnable = false;
     leftHandEnable = true;
-    rightHandEnable = true;
-    pledgeEnable = false; 
+    rightHandEnable = false;
+    pledgeEnable = false;
+    tremauxEnable = false;
     // -- 
 
     if(randomMouseEnable) freeList(&randomMouseSolution);
     if(leftHandEnable) freeList(&leftHandSolution);
     if(rightHandEnable) freeList(&rightHandSolution);
-    if(pledgeEnable) freeList(&pledgeSolution);    
+    if(pledgeEnable) freeList(&pledgeSolution);
+    if(tremauxEnable) freeList(&tremauxSolution);    
 
     sleepTime = 7000000/(lab.rows * lab.cols);
     solving = TRUE;
     if(randomMouseEnable) solveRandomMouse(&lab, &randomMouseSolution);
     if(leftHandEnable) solveLeftHand(&lab, &leftHandSolution);
     if(rightHandEnable) solveRightHand(&lab, &rightHandSolution);
-    if(pledgeEnable) solvePledge(&lab, &pledgeSolution);    
+    if(pledgeEnable) solvePledge(&lab, &pledgeSolution);
+    if(tremauxEnable) solveTremaux(&lab, &tremauxSolution);
     solving=FALSE;
-    printSolution(&randomMouseSolution);        
+    //printSolution(&randomMouseSolution);        
     gtk_widget_queue_draw(drawArea);
 
     return;
