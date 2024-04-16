@@ -29,9 +29,9 @@ int sleepTime = 700000;
 #define B_LEFT 0b1000
 
 //Tremaux
-#define UNEXPLORED 0
-#define EXPLORED 1
-#define F_EXPLORED 2
+#define UNMARKED 0
+#define MARKED 1
+#define F_MARKED 2
 
 
 //TODO: make all the structs typedef
@@ -63,6 +63,43 @@ void addNode(struct node* list, struct pos position){
     list->next->next = NULL;
 }
 
+
+//Stack
+struct stackNode{
+    struct pos position;
+    struct stackNode* next;
+};
+typedef struct {
+    struct stackNode* top;
+} stack;
+stack* createStack() {
+    stack* s = (stack*)malloc(sizeof(stack));
+    s->top = NULL;
+    return s;
+}
+void push(stack* s, struct pos position) {
+    struct stackNode* newNode = (struct stackNode*)malloc(sizeof(struct stackNode));
+    newNode->position = position;
+    newNode->next = s->top;
+    s->top = newNode;
+    printf("PUSHED: {%d, %d}\n", position.row, position.col);
+}
+struct pos pop(stack* s) {
+    if (s->top == NULL) {
+        return (struct pos){-1, -1};
+    }
+
+    struct stackNode* tempNode = s->top;
+    struct pos position = tempNode->position;
+    s->top = s->top->next;
+    free(tempNode);
+
+    printf("POPPED: {%d, %d}\n", position.row, position.col);
+    return position;
+}
+bool isStackEmpty(stack* s) {
+    return s->top == NULL;
+}
 
 struct maze lab = {NULL, 1, 1};
 //Solutions
@@ -302,7 +339,7 @@ void generateLabyrinth(struct maze* lab){
     }
     for(int i=0; i<lab->rows; i++){                        
         for (int j = 0; j < lab->cols; j++){
-            struct cell c = {NONE, 0};
+            struct cell c = {NONE, 0, UNMARKED};
             lab->matrix[i][j] = c;
         }         
     }
@@ -524,65 +561,281 @@ void solvePledge(struct maze* lab, struct node* solutionList){
     lab->matrix[0][0].barrier = lab->matrix[0][0].barrier | B_LEFT; //Remove wall in entrance
 }
 
-void solveTremaux(struct maze* lab, struct node* solutionList) {
-    //Initialization
-    struct pos start = {0, 0};
-    struct pos end = {lab->rows - 1, lab->cols - 1};
-    struct pos stack[lab->rows * lab->cols];
-    int top = -1;
-    stack[++top] = start;
-    lab->matrix[start.row][start.col].visited = EXPLORED;
+//TREMAUX AUX
+void unmarkAllNodes(struct maze* lab){
+    for(int r = 0; r < lab->rows; r++){
+        for(int c = 0; c < lab->cols; c++){
+            lab->matrix[r][c].visited = UNMARKED;
+        }
+    }
+}
 
-    //HEAD NODE
-    struct node* currentNode = solutionList;
-    currentNode->position = start;
-    currentNode->next = NULL;
+bool isValidMove(struct maze *lab, int row, int col, char direction, int newRow, int newCol){
+    printf("MOVING TO: {%d, %d}\n", newRow, newCol);
+    // Check if the new position is within the maze bounds
+    if (newRow < 0 || newRow >= lab->rows || newCol < 0 || newCol >= lab->cols) {
+        return false;
+    }
 
-    //Direction options
+    // Check if the current cell has a barrier in the given direction
+    if (!(lab->matrix[row][col].barrier & direction)) {
+        return false;
+    }
+
+    return true;
+}
+
+int availablePaths(struct cell* currentCell) {
+    int availablePaths = 0;
+
+    if(currentCell->barrier & B_UPPER) availablePaths++;
+    if(currentCell->barrier & B_RIGHT) availablePaths++;
+    if(currentCell->barrier & B_LOWER) availablePaths++;
+    if(currentCell->barrier & B_LEFT) availablePaths++;
+
+    return availablePaths;
+}
+
+bool isPassage(struct maze* lab, int row, int col) {
+    struct cell currentCell = lab->matrix[row][col];
+    return availablePaths(&currentCell) == 2;
+}
+
+bool isJuction(struct maze* lab, int row, int col){
+    struct cell currentCell = lab->matrix[row][col];
+    return availablePaths(&currentCell) > 2;
+}
+
+bool isDeadEnd(struct maze* lab, int row, int col){
+    struct cell currentCell = lab->matrix[row][col];
+    return availablePaths(&currentCell) == 1;
+}
+
+void moveToNext(struct pos* nextCell, struct pos* currentPos, stack* s){
+    currentPos->row = nextCell->row;
+    currentPos->col = nextCell->col;
+    push(s, *currentPos);
+}
+
+struct pos getPassageNext(struct maze* lab, struct pos* currentPos) {
+    char directions[] = {B_UPPER, B_RIGHT, B_LOWER, B_LEFT};
     int dRow[] = {-1, 0, 1, 0};
     int dCol[] = {0, 1, 0, -1};
-    char directionBits[] = {B_UPPER, B_RIGHT, B_LOWER, B_LEFT};
 
-    //NOW WE SOLVE THIS SHI🗣🔥🔥🔥🔥
-    while (top >= 0) {
-        struct pos current = stack[top];
+    // Search for unmarked passages
+    for (int i = 0; i < 4; i++) {
+        char direction = directions[i];
+        int newRow = currentPos->row + dRow[i];
+        int newCol = currentPos->col + dCol[i];
+        
+        // Ensure the move is valid and the new cell is unmarked
+        printf("CHECKING: {%d, %d -- %d}\n", newRow, newCol, lab->matrix[currentPos->row][currentPos->col].visited);
+        if (isValidMove(lab, currentPos->row, currentPos->col, direction, newRow, newCol) && 
+            lab->matrix[newRow][newCol].visited == UNMARKED) {
+            struct pos nextCell = {newRow, newCol};
+            lab->matrix[newRow][newCol].visited = MARKED;
+            printf("NEXT PASSAGE CELL: {%d, %d} -- %d\n", nextCell.row, nextCell.col, lab->matrix[newRow][newCol].visited);
+            return nextCell;
+        }
+    }
 
-        if (current.row == end.row && current.col == end.col) {
-            //WE DONE
+    // No valid passage found, return invalid position
+    return (struct pos){-1, -1};
+}
+
+void backtrack(struct maze* lab, stack* s, struct pos* currentPos) {
+    if (s == NULL || isStackEmpty(s)) {
+        printf("STACK IS EMPTY\n");
+        return;
+    }
+
+    while (!isJuction(lab, currentPos->row, currentPos->col)) {
+        lab->matrix[currentPos->row][currentPos->col].visited = F_MARKED;
+        struct pos previousCell = pop(s);
+        *currentPos = previousCell;
+        if (currentPos->row == -1 || currentPos->col == -1) {
+            printf("THERE WAS A HUGE ERROR WHILE BACKTRACKING\n");
+            return;
+        }
+    }
+    push(s, *currentPos);
+}
+
+int junctionMarks(struct maze* lab, int row, int col) {
+    int markedEntrances = 0;
+    char directions[] = {B_UPPER, B_RIGHT, B_LOWER, B_LEFT};
+    int dRow[] = {-1, 0, 1, 0};
+    int dCol[] = {0, 1, 0, -1};
+
+    for(int i = 0; i < 4; i++){
+        char direction = directions[i];
+        int newRow = row + dRow[i];
+        int newCol = col + dCol[i];
+        if(newRow == 0 && newCol == -1) markedEntrances++;
+        if(isValidMove(lab, row, col, direction, newRow, newCol) &&
+            (lab->matrix[newRow][newCol].visited == MARKED || lab->matrix[newRow][newCol].visited == F_MARKED)) {
+                markedEntrances++;
+        }
+    }
+
+    printf("%d JUNCTION MARKS\n", markedEntrances);
+    return markedEntrances == 0 ? 1 : markedEntrances;
+}
+
+void randomUnmarkedEntrance(struct maze* lab, struct pos* currentPos, stack* s) {
+    char directions[] = {B_UPPER, B_RIGHT, B_LOWER, B_LEFT};
+    int dRow[] = {-1, 0, 1, 0};
+    int dCol[] = {0, 1, 0, -1};
+
+    for(int i = 0; i < 4; i++){
+        int newPos = rand() % 4;
+        char direction = directions[newPos];
+        int newRow = currentPos->row + dRow[newPos];
+        int newCol = currentPos->col + dCol[newPos];
+        if(isValidMove(lab, currentPos->row, currentPos->col, direction, newRow, newCol)
+            && lab->matrix[newRow][newCol].visited == UNMARKED) {
+            currentPos->row = newRow;
+            currentPos->col = newCol;
+            lab->matrix[newRow][newCol].visited = MARKED;
+            push(s, *currentPos);
+            return;
+        }
+    }
+
+    //XD MOMENT
+    for(int i = 0; i < 4; i++){
+        char direction = directions[i];
+        int newRow = currentPos->row + dRow[i];
+        int newCol = currentPos->col + dCol[i];
+        if(isValidMove(lab, currentPos->row, currentPos->col, direction, newRow, newCol)
+            && lab->matrix[newRow][newCol].visited == UNMARKED) {
+            currentPos->row = newRow;
+            currentPos->col = newCol;
+            lab->matrix[newRow][newCol].visited = MARKED;
+            return;
+        }
+    }
+}
+
+bool canBacktrack(struct maze* lab, stack* s){
+    return false;
+}
+
+void pickBestEntrance(struct maze* lab, struct pos* currentPos) {
+    // Possible directions
+    char directions[] = {B_UPPER, B_RIGHT, B_LOWER, B_LEFT};
+    int dRow[] = {-1, 0, 1, 0};
+    int dCol[] = {0, 1, 0, -1};
+
+    struct pos bestChoiceUnmarked = {-1, -1};
+    struct pos bestChoiceMarked = {-1, -1};
+
+    // Iterate over possible directions
+    for (int i = 0; i < 4; i++) {
+        char direction = directions[i];
+        int newRow = currentPos->row + dRow[i];
+        int newCol = currentPos->col + dCol[i];
+
+        // Check if the move is valid and within bounds
+        if (isValidMove(lab, currentPos->row, currentPos->col, direction, newRow, newCol)) {
+            // Determine the state of the next cell
+            int nextCellState = lab->matrix[newRow][newCol].visited;
+            
+            // Prioritize UNMARKED cells
+            if (nextCellState == UNMARKED) {
+                bestChoiceUnmarked = (struct pos){newRow, newCol};
+                break; // Prioritize UNMARKED, stop looking further if found
+            } else if (nextCellState == MARKED) {
+                // If no UNMARKED cell is found, track MARKED cells
+                bestChoiceMarked = (struct pos){newRow, newCol};
+            }
+        }
+    }
+
+    // Update current position based on priority
+    if (bestChoiceUnmarked.row != -1 && bestChoiceUnmarked.col != -1) {
+        // Found an unmarked entrance
+        *currentPos = bestChoiceUnmarked;
+        lab->matrix[bestChoiceUnmarked.row][bestChoiceUnmarked.col].visited = MARKED;
+    } else if (bestChoiceMarked.row != -1 && bestChoiceMarked.col != -1) {
+        // No unmarked entrance, fallback to marked entrance
+        *currentPos = bestChoiceMarked;
+    } else {
+        // Handle case where no valid choice is found (should not happen)
+        printf("No valid entrance found in pickBestEntrance.\n");
+    }
+}
+
+//TREMAUX
+void solveTremaux(struct maze* lab, struct node* solutionList) {
+    unmarkAllNodes(lab);
+    struct node* currentNode = solutionList;
+    struct pos currentPos = currentNode->position;
+    lab->matrix[currentPos.row][currentPos.col].visited = MARKED;
+
+    stack* s = createStack();
+    push(s, currentPos);
+
+    while (!(currentPos.row == lab->rows - 1 && currentPos.col == lab->cols - 1)) {
+        printf("CURRENT CELL IS: {%d, %d}\n", currentPos.row, currentPos.col);
+        //WOOPSIE
+        if (currentPos.row == -1 || currentPos.col == -1) {
+            printf("THERE WAS A HUGE ERROR WHILE SOLVING\n");
             return;
         }
 
-        for (int i = 0; i < 4; i++) {
-            int newRow = current.row + dRow[i];
-            int newCol = current.col + dCol[i];
-            char direction = directionBits[i];
-
-            //Check barrier or out of bounds
-            printf("Check boundaries and barriers\n");
-            if (newRow >= 0 && newRow < lab->rows && newCol >= 0 && newCol < lab->cols &&
-                !(lab->matrix[current.row][current.col].barrier & direction)) {
-                
-                printf("Check UNEXPLORED or EXPLORED\n");
-                if (lab->matrix[newRow][newCol].visited == UNEXPLORED) {
-                    printf("UNEXPLORED LOGIC\n");
-                    lab->matrix[newRow][newCol].visited = EXPLORED;
-                    struct pos newPos = {newRow, newCol};
-                    addNode(currentNode, newPos);
-                    currentNode = currentNode->next;
-                    stack[++top] = newPos;
-                    break;
-                } else if (lab->matrix[newRow][newCol].visited == EXPLORED) {
-                    printf("EXPLORED LOGIC\n");
-                    lab->matrix[current.row][current.col].visited = F_EXPLORED;
-                    top--; //Pop current from stack (kinda)
-                    break;
-                }
-            }
+        //PASSAGES
+        if (isPassage(lab, currentPos.row, currentPos.col)) {
+            printf("PASSAGE\n");
+            struct pos nextCell = getPassageNext(lab, &currentPos);
+            moveToNext(&nextCell, &currentPos, s);
+            addNode(currentNode, currentPos);
+            currentNode = currentNode->next;
+            continue;
         }
 
-        /* printf("THERE WAS A HUGE FUCKING PROBLEM NGL\n");
-        return; */
+        //DEAD END
+        if (isDeadEnd(lab, currentPos.row, currentPos.col)) {
+            printf("DEAD END\n");
+            backtrack(lab, s, &currentPos);
+            addNode(currentNode, currentPos);
+            currentNode = currentNode->next;
+            continue;
+        }
+
+        //JUNCTIONS
+        if (isJuction(lab, currentPos.row, currentPos.col)) {
+            //RULE 1: Arbitrary unmarked entrance
+            if (junctionMarks(lab, currentPos.row, currentPos.col) == 1) {
+                printf("JUNCTION RULE 1\n");
+                randomUnmarkedEntrance(lab, &currentPos, s);
+                addNode(currentNode, currentPos);
+                currentNode = currentNode->next;
+            } else if (canBacktrack(lab, s)) {
+                printf("JUNCTION RULE 2\n");
+                //RULE 2: Backtrack if possible
+                backtrack(lab, s, &currentPos);
+                addNode(currentNode, currentPos);
+                currentNode = currentNode->next;
+            } else {
+                printf("JUNCTION RULE 3\n");
+                //RULE 3: Choose the best entrance
+                pickBestEntrance(lab, &currentPos);
+                push(s, currentPos);
+                addNode(currentNode, currentPos);
+                currentNode = currentNode->next;
+            }
+        }
+        if(!solving) return;
+        gtk_widget_queue_draw(drawArea);
+        while(gtk_events_pending()) gtk_main_iteration();
+        usleep(sleepTime*2);   
     }
+
+    // Once the end point is reached
+    addNode(currentNode, currentPos);
+    currentNode = currentNode->next;
+    printf("Reached the end of the maze!\n");
 }
 
 
@@ -900,7 +1153,7 @@ void loadFile(char* path){
     }
     for(int i=0; i<lab.rows; i++){                        
         for (int j = 0; j < lab.cols; j++){
-            struct cell c = {NONE, 0};
+            struct cell c = {NONE, 0, UNMARKED};
             lab.matrix[i][j] = c;
         }         
     }
@@ -979,10 +1232,10 @@ void solveButton(__attribute__((unused)) GtkWidget *widget,
 
     //Test -- 
     randomMouseEnable = false;
-    leftHandEnable = true;
+    leftHandEnable = false;
     rightHandEnable = false;
     pledgeEnable = false;
-    tremauxEnable = false;
+    tremauxEnable = true;
     // -- 
 
     if(randomMouseEnable) freeList(&randomMouseSolution);
