@@ -797,10 +797,10 @@ void solveTremaux(struct maze* lab, struct node* solutionList) {
 
 //FATTAH AUX
 int MD(struct pos currentPos, struct pos endPos){
-    return abs(currentPos.row - endPos.row + 1) + abs(currentPos.col - endPos.col + 1);
+    return abs(currentPos.row - endPos.row) + abs(currentPos.col - endPos.col);
 }
 
-bool hasHealthyPath(struct maze* lab, int bestMD, struct pos currentPos, struct pos endPos) {
+bool hasProductivePath(struct maze* lab, int bestMD, struct pos currentPos, struct pos endPos) {
     char directions[] = {B_RIGHT, B_LOWER};
     int dRow[] = {0, 1};
     int dCol[] = {1, 0};
@@ -819,7 +819,7 @@ bool hasHealthyPath(struct maze* lab, int bestMD, struct pos currentPos, struct 
     return false;
 }
 
-void getRandomHealthy(struct maze* lab, int bestMD, char* currentDir, struct pos* currentPos, struct pos endPos) {
+void getRandomProductive(struct maze* lab, int bestMD, char* currentDir, struct pos* currentPos, struct pos endPos) {
     char directions[] = {B_RIGHT, B_LOWER};
     int dRow[] = {0, 1};
     int dCol[] = {1, 0};
@@ -893,9 +893,9 @@ void solveFattah(struct maze* lab, struct node* solutionList){
     lab->matrix[0][0].barrier = lab->matrix[0][0].barrier & ~(B_LEFT);
 
     while(!(currentPos.row == endPos.row && currentPos.col == endPos.col)) {
-        if(bestMD == MD(currentPos, endPos) && hasHealthyPath(lab, bestMD, currentPos, endPos)) {
+        if(bestMD == MD(currentPos, endPos) && hasProductivePath(lab, bestMD, currentPos, endPos)) {
             bestMD--;
-            getRandomHealthy(lab, bestMD, &currentDir, &currentPos, endPos);
+            getRandomProductive(lab, bestMD, &currentDir, &currentPos, endPos);
             addNode(currentNode, currentPos);
             currentNode = currentNode->next;
             mode = NORMAL;
@@ -1314,8 +1314,8 @@ void solveButton(__attribute__((unused)) GtkWidget *widget,
     leftHandEnable = false;
     rightHandEnable = false;
     pledgeEnable = false;
-    tremauxEnable = false;
-    fattahEnable = true;
+    tremauxEnable = true;
+    fattahEnable = false;
     // -- 
 
     if(randomMouseEnable) freeList(&randomMouseSolution);
