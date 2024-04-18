@@ -33,6 +33,10 @@ int sleepTime = 700000;
 #define MARKED 1
 #define F_MARKED 2
 
+//Fattah
+#define NORMAL 0
+#define TRAVERSAL_LEFT 1
+#define TRAVERSAL_RIGHT 2
 
 //TODO: make all the structs typedef
 //Labirynth
@@ -129,6 +133,8 @@ bool pledgeEnable = false;
 struct node pledgeSolution = {NULL, {0,0}};
 bool tremauxEnable = false;
 struct node tremauxSolution = {NULL, {0,0}};
+bool fattahEnable = false;
+struct node fattahSolution = {NULL, {0,0}};
 
 
 
@@ -162,6 +168,7 @@ void freeMemory(){
     if(rightHandEnable) freeList(&rightHandSolution);
     if(pledgeEnable) freeList(&pledgeSolution);
     if(tremauxEnable) freeList(&tremauxSolution);
+    if(fattahEnable) freeList(&fattahSolution);
 }
 
 void printLabyrinth(struct maze* lab){
@@ -212,7 +219,7 @@ char leftDirection(char direction){
         return B_LEFT;        
     case B_LOWER:
         return B_RIGHT;
-    case B_RIGHT:        
+    case B_RIGHT:     
         return B_UPPER;        
     case B_LEFT:
         return B_LOWER;    
@@ -227,7 +234,7 @@ char rightDirection(char direction){
         return B_RIGHT;        
     case B_LOWER:
         return B_LEFT;
-    case B_RIGHT:        
+    case B_RIGHT:     
         return B_LOWER;        
     case B_LEFT:
         return B_UPPER;    
@@ -407,6 +414,7 @@ void disableSolutions(){
     rightHandEnable = false;
     pledgeEnable = false;
     tremauxEnable = false;
+    fattahEnable = false;
 }
 
 void solveRandomMouse(struct maze* lab, struct node* solutionList){
@@ -494,7 +502,7 @@ void solveRightHand(struct maze* lab, struct node* solutionList){
     struct node* currentNode = solutionList;
     struct pos currentPos = currentNode->position;    
     struct pos endPos = {lab->rows-1,lab->cols-1};
-    char currentDir = B_RIGHT; 
+    char currentDir = B_RIGHT;
 
     while(currentPos.row != endPos.row || currentPos.col != endPos.col){        
         
@@ -787,6 +795,127 @@ void solveTremaux(struct maze* lab, struct node* solutionList) {
     currentNode = currentNode->next;
 }
 
+//FATTAH AUX
+int MD(struct pos currentPos, struct pos endPos){
+    return abs(currentPos.row - endPos.row + 1) + abs(currentPos.col - endPos.col + 1);
+}
+
+bool hasHealthyPath(struct maze* lab, int bestMD, struct pos currentPos, struct pos endPos) {
+    char directions[] = {B_RIGHT, B_LOWER};
+    int dRow[] = {0, 1};
+    int dCol[] = {1, 0};
+
+    
+    for(int i = 0; i < 2; i++){
+        char direction = directions[i];
+        int newRow = currentPos.row + dRow[i];
+        int newCol = currentPos.col + dCol[i];
+        if(isValidMove(lab, currentPos.row, currentPos.col, direction, newRow, newCol) &&
+            bestMD > MD((struct pos){newRow, newCol}, endPos)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+void getRandomHealthy(struct maze* lab, int bestMD, char* currentDir, struct pos* currentPos, struct pos endPos) {
+    char directions[] = {B_RIGHT, B_LOWER};
+    int dRow[] = {0, 1};
+    int dCol[] = {1, 0};
+    struct pos positions[] = {(struct pos){-1,-1}, (struct pos){-1,-1}};
+    int validPositions = 0;
+    int randomNumber = rand() % 2;
+
+    for(int i = 0; i < 2; i++){
+        char direction = directions[i];
+        int newRow = currentPos->row + dRow[i];
+        int newCol = currentPos->col + dCol[i];
+        if(isValidMove(lab, currentPos->row, currentPos->col, direction, newRow, newCol)) {
+            positions[i] = (struct pos){newRow, newCol};
+            validPositions++;
+        }
+    }
+
+    struct pos temp;
+    if(validPositions == 1) {
+        temp = (positions[0].row == -1 && positions[0].col == -1) ? positions[1] : positions[0];
+        *currentDir = (positions[0].row == -1 && positions[0].col == -1) ? directions[1] : directions[0];
+    } else {
+        temp = positions[randomNumber];
+        *currentDir = directions[randomNumber];
+    }
+    currentPos->row = temp.row;
+    currentPos->col = temp.col;
+}
+
+struct pos nextTraversalPath(struct maze* lab, char mode, char* currentDir, struct pos currentPos) {
+    struct pos nextCell = {-1, -1};
+    char dir = 0;
+
+    if(mode == TRAVERSAL_LEFT){
+        if((lab->matrix[currentPos.row][currentPos.col].barrier & leftDirection(*currentDir)) != 0){
+            dir = leftDirection(*currentDir);
+        } else if((lab->matrix[currentPos.row][currentPos.col].barrier & *currentDir) != 0){
+            dir = *currentDir;
+        } else if((lab->matrix[currentPos.row][currentPos.col].barrier & rightDirection(*currentDir)) != 0){
+            dir = rightDirection(*currentDir);
+        } else {
+            dir = oppositeDirection(*currentDir);
+        }
+    } else {
+        if((lab->matrix[currentPos.row][currentPos.col].barrier & rightDirection(*currentDir)) != 0){
+            dir = rightDirection(*currentDir);
+        } else if((lab->matrix[currentPos.row][currentPos.col].barrier & *currentDir) != 0){
+            dir = *currentDir;
+        } else if((lab->matrix[currentPos.row][currentPos.col].barrier & leftDirection(*currentDir)) != 0){
+            dir = leftDirection(*currentDir);
+        } else {
+            dir = oppositeDirection(*currentDir);
+        }
+    }
+    *currentDir = dir;
+    nextCell = neighborPosition(lab, currentPos.row, currentPos.col, dir);
+
+    return nextCell;
+}
+
+//FATTAH
+void solveFattah(struct maze* lab, struct node* solutionList){
+    struct node* currentNode = solutionList;
+    struct pos currentPos = currentNode->position;
+    struct pos endPos = {lab->rows - 1, lab->cols - 1};
+    int bestMD = MD(currentPos, endPos);
+    char mode = NORMAL;
+    char tModes[] = {TRAVERSAL_LEFT, TRAVERSAL_RIGHT};
+    int modeIndex = rand() % 2;
+    char currentDir = B_RIGHT;
+    lab->matrix[0][0].barrier = lab->matrix[0][0].barrier & ~(B_LEFT);
+
+    while(!(currentPos.row == endPos.row && currentPos.col == endPos.col)) {
+        if(bestMD == MD(currentPos, endPos) && hasHealthyPath(lab, bestMD, currentPos, endPos)) {
+            bestMD--;
+            getRandomHealthy(lab, bestMD, &currentDir, &currentPos, endPos);
+            addNode(currentNode, currentPos);
+            currentNode = currentNode->next;
+            mode = NORMAL;
+        } else if(mode == TRAVERSAL_LEFT || mode == TRAVERSAL_RIGHT) {
+            currentPos = nextTraversalPath(lab, mode, &currentDir, currentPos);
+            addNode(currentNode, currentPos);
+            currentNode = currentNode->next;
+        } else {
+            mode = tModes[modeIndex];
+            currentPos = nextTraversalPath(lab, mode, &currentDir, currentPos);
+            addNode(currentNode, currentPos);
+            currentNode = currentNode->next;
+        }
+
+        drawPartialSolution();
+    }
+
+    lab->matrix[0][0].barrier = lab->matrix[0][0].barrier | B_LEFT;
+}
+
 
 void printSolution(struct node* solutionList){    
     struct node* currentNode = solutionList;
@@ -814,7 +943,7 @@ void drawSolution(cairo_t *cr, struct node* list, int cellWidth, int cellHeight,
     char lastDir = B_RIGHT;
     int track = cellWidth/2;
 
-    while(currentNode != NULL){                        
+    while(currentNode != NULL){             
         int xCord = currentNode->position.col * cellWidth + offsetX + padding/2;
         int yCord = currentNode->position.row * cellHeight + offsetY + padding/2;
         
@@ -976,6 +1105,7 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
     if(rightHandEnable) drawSolution(cr, &rightHandSolution, cellWidth, cellHeight, width, height, padding);
     if(pledgeEnable) drawSolution(cr, &pledgeSolution, cellWidth, cellHeight, width, height, padding);
     if(tremauxEnable) drawSolution(cr, &tremauxSolution, cellWidth, cellHeight, width, height, padding);
+    if(fattahEnable) drawSolution(cr, &fattahSolution, cellWidth, cellHeight, width, height, padding);
 
     cairo_stroke(cr);
 
@@ -1184,14 +1314,16 @@ void solveButton(__attribute__((unused)) GtkWidget *widget,
     leftHandEnable = false;
     rightHandEnable = false;
     pledgeEnable = false;
-    tremauxEnable = true;
+    tremauxEnable = false;
+    fattahEnable = true;
     // -- 
 
     if(randomMouseEnable) freeList(&randomMouseSolution);
     if(leftHandEnable) freeList(&leftHandSolution);
     if(rightHandEnable) freeList(&rightHandSolution);
     if(pledgeEnable) freeList(&pledgeSolution);
-    if(tremauxEnable) freeList(&tremauxSolution);    
+    if(tremauxEnable) freeList(&tremauxSolution);
+    if(fattahEnable) freeList(&fattahSolution);
 
     sleepTime = 7000000/(lab.rows * lab.cols);
     solving = TRUE;
@@ -1200,6 +1332,7 @@ void solveButton(__attribute__((unused)) GtkWidget *widget,
     if(rightHandEnable) solveRightHand(&lab, &rightHandSolution);
     if(pledgeEnable) solvePledge(&lab, &pledgeSolution);
     if(tremauxEnable) solveTremaux(&lab, &tremauxSolution);
+    if(fattahEnable) solveFattah(&lab, &fattahSolution);
     solving=FALSE;
     //printSolution(&randomMouseSolution);        
     gtk_widget_queue_draw(drawArea);
