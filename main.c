@@ -1344,7 +1344,6 @@ void generateButton(__attribute__((unused)) GtkWidget *widget,
 }
 
 void randomSet(GtkWidget *widget, gpointer user_data){
-    printf("Random Mouse\n");
     if (randomMouseEnable) {
         gtk_widget_set_opacity(GTK_WIDGET(user_data), 1.0);
         randomMouseEnable = false;
@@ -1355,7 +1354,6 @@ void randomSet(GtkWidget *widget, gpointer user_data){
 }
 
 void leftHandSet(GtkWidget *widget, gpointer user_data){
-    printf("Left Hand\n");
     if (leftHandEnable) {
         gtk_widget_set_opacity(GTK_WIDGET(user_data), 1.0);
         leftHandEnable = false;
@@ -1366,7 +1364,6 @@ void leftHandSet(GtkWidget *widget, gpointer user_data){
 }
 
 void rightHandSet(GtkWidget *widget, gpointer user_data) {
-    printf("Right Hand\n");
     if (rightHandEnable) {
         gtk_widget_set_opacity(GTK_WIDGET(user_data), 1.0);
         rightHandEnable = false;
@@ -1377,7 +1374,6 @@ void rightHandSet(GtkWidget *widget, gpointer user_data) {
 }
 
 void pledgeSet(GtkWidget *widget, gpointer user_data) {
-    printf("Pledge\n");
     if (pledgeEnable) {
         gtk_widget_set_opacity(GTK_WIDGET(user_data), 1.0);
         pledgeEnable = false;
@@ -1388,7 +1384,6 @@ void pledgeSet(GtkWidget *widget, gpointer user_data) {
 }
 
 void tremauxSet(GtkWidget *widget, gpointer user_data) {
-    printf("Tremaux\n");
     if (tremauxEnable) {
         gtk_widget_set_opacity(GTK_WIDGET(user_data), 1.0);
         tremauxEnable = false;
@@ -1399,7 +1394,6 @@ void tremauxSet(GtkWidget *widget, gpointer user_data) {
 }
 
 void fattahSet(GtkWidget *widget, gpointer user_data) {
-    printf("Fattah\n");
     if (fattahEnable) {
         gtk_widget_set_opacity(GTK_WIDGET(user_data), 1.0);
         fattahEnable = false;
