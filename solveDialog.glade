@@ -22,7 +22,7 @@
             <property name="layout-style">end</property>
             <child>
               <object class="GtkButton" id="button1">
-                <property name="label" translatable="yes">Save</property>
+                <property name="label" translatable="yes">Select</property>
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
                 <property name="receives-default">True</property>

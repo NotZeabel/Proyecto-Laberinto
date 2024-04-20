@@ -796,7 +796,7 @@ void solveTremaux(struct maze* lab, struct node* solutionList) {
 
 //FATTAH AUX
 int MD(struct pos currentPos, struct pos endPos){
-    return abs(currentPos.row - endPos.row) + abs(currentPos.col - endPos.col);
+    return abs(currentPos.row - endPos.row) + abs(currentPos.col - endPos.col) + 2;
 }
 
 bool hasProductivePath(struct maze* lab, int bestMD, struct pos currentPos, struct pos endPos) {
@@ -1350,6 +1350,8 @@ void solveButton(__attribute__((unused)) GtkWidget *widget,
 
     g_return_if_fail (window != NULL);
 
+    disableSolutions();
+
     builder = gtk_builder_new_from_file("solveDialog.glade");
 
     dialog = GTK_WIDGET(gtk_builder_get_object (builder, "solveDialog"));
@@ -1361,12 +1363,6 @@ void solveButton(__attribute__((unused)) GtkWidget *widget,
 
     if(response == 1) {
         if(randomMouseEnable || leftHandEnable || rightHandEnable || pledgeEnable || tremauxEnable || fattahEnable){
-            if(randomMouseEnable) freeList(&randomMouseSolution);
-            if(leftHandEnable) freeList(&leftHandSolution);
-            if(rightHandEnable) freeList(&rightHandSolution);
-            if(pledgeEnable) freeList(&pledgeSolution);
-            if(tremauxEnable) freeList(&tremauxSolution);
-            if(fattahEnable) freeList(&fattahSolution);
             gtk_widget_set_sensitive(executeWidget, TRUE);
         } else {
             GtkWidget *dialogWindow;
@@ -1428,7 +1424,6 @@ void executeButton(__attribute__((unused)) GtkWidget *widget,
     gtk_widget_set_sensitive(executeWidget, TRUE);
     gtk_widget_set_sensitive(stopWidget, FALSE);
     gtk_widget_set_sensitive(stopAnimationWidget, FALSE);
-
 }
 
 void stopAnimationButton(__attribute__((unused)) GtkWidget *widget, 
