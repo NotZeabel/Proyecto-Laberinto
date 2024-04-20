@@ -568,8 +568,7 @@ void solvePledge(struct maze* lab, struct node* solutionList){
             } else{
                 dir = oppositeDirection(currentDir);
                 angle -= 180;
-            }               
-            printf("%d\n" , angle);
+            }                           
             if(angle == 0){
                 handOnWall = FALSE;
             }            
@@ -1098,6 +1097,8 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
     }
 
     cairo_stroke(cr);
+
+    //if(cellWidth<7 || cellHeight<7) return FALSE; 
     
     //Draw Solutions
     //TODO draw each solution with a different color
@@ -1490,15 +1491,27 @@ void executeButton(__attribute__((unused)) GtkWidget *widget,
 
     sleepTime = 7000000/(lab.rows * lab.cols);    
     if(randomMouseEnable && solving) solveRandomMouse(&lab, &randomMouseSolution);
+    gtk_widget_queue_draw(drawArea);
+    while(gtk_events_pending()) gtk_main_iteration();
     if(leftHandEnable && solving) solveLeftHand(&lab, &leftHandSolution);
+    gtk_widget_queue_draw(drawArea);
+    while(gtk_events_pending()) gtk_main_iteration();
     if(rightHandEnable && solving) solveRightHand(&lab, &rightHandSolution);
+    gtk_widget_queue_draw(drawArea);
+    while(gtk_events_pending()) gtk_main_iteration();
     if(pledgeEnable && solving) solvePledge(&lab, &pledgeSolution);
+    gtk_widget_queue_draw(drawArea);
+    while(gtk_events_pending()) gtk_main_iteration();
     if(tremauxEnable && solving) solveTremaux(&lab, &tremauxSolution);
+    gtk_widget_queue_draw(drawArea);
+    while(gtk_events_pending()) gtk_main_iteration();
     if(fattahEnable && solving) solveFattah(&lab, &fattahSolution);
+    gtk_widget_queue_draw(drawArea);
+    while(gtk_events_pending()) gtk_main_iteration();
     drawingAnimation=FALSE;
     solving = FALSE;
     
-    gtk_widget_queue_draw(drawArea);
+    printf("solved");    
     enableSideButtons();
     gtk_widget_set_sensitive(executeWidget, TRUE);
     gtk_widget_set_sensitive(stopWidget, FALSE);
@@ -1555,8 +1568,7 @@ void saveButton(GtkWidget *widget, __attribute__((unused)) gpointer   data) {
             g_free(filename);
             filename = extendedFilename;
         }
-
-        printf("%s\n", filename);
+        
         saveFile(filename);
         g_free (filename);
     }
