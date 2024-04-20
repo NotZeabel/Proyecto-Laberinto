@@ -938,10 +938,12 @@ void printSolution(struct node* solutionList){
 
 //================= DRAW ==================
 
-void drawSolution(cairo_t *cr, struct node* list, int cellWidth, int cellHeight, int width, int height, int padding){    
+void drawSolution(cairo_t *cr, struct node* list, int cellWidth, int cellHeight, int width, int height, int padding, int track){    
     struct node* currentNode = list;
     char lastDir = B_RIGHT;
-    int track = cellWidth/2;
+    int trackWidth = cellWidth - (cellWidth/7 * track);
+    int trackHeigth = cellHeight/7 * track;
+
 
     while(currentNode != NULL){             
         int xCord = currentNode->position.col * cellWidth + offsetX + padding/2;
@@ -958,20 +960,20 @@ void drawSolution(cairo_t *cr, struct node* list, int cellWidth, int cellHeight,
         //Cairo Lineto is in all cases, simplify 
         switch (lastDir){
             case B_UPPER:
-                cairo_move_to(cr, xCord + track, yCord + cellHeight);
-                cairo_line_to(cr, xCord + track, yCord + track);                            
+                cairo_move_to(cr, xCord + trackWidth, yCord + cellHeight);
+                cairo_line_to(cr, xCord + trackWidth, yCord + trackHeigth);                            
                 break;
             case B_LOWER:
-                cairo_move_to(cr, xCord + track, yCord);
-                cairo_line_to(cr, xCord + track, yCord + track);        
+                cairo_move_to(cr, xCord + trackWidth, yCord);
+                cairo_line_to(cr, xCord + trackWidth, yCord + trackHeigth);        
                 break;
             case B_RIGHT:                                
-                cairo_move_to(cr, xCord, yCord + track);
-                cairo_line_to(cr, xCord + track, yCord + track);   
+                cairo_move_to(cr, xCord, yCord + trackHeigth);
+                cairo_line_to(cr, xCord + trackWidth, yCord + trackHeigth);   
                 break;
             case B_LEFT:
-                cairo_move_to(cr, xCord + cellWidth, yCord + track);
-                cairo_line_to(cr, xCord + track, yCord + track);                       
+                cairo_move_to(cr, xCord + cellWidth, yCord + trackHeigth);
+                cairo_line_to(cr, xCord + trackWidth, yCord + trackHeigth);                       
                 break;
         }    
                     
@@ -987,20 +989,20 @@ void drawSolution(cairo_t *cr, struct node* list, int cellWidth, int cellHeight,
 
         switch (nextDir){
             case B_UPPER:
-                cairo_move_to(cr, xCord + track, yCord + track);
-                cairo_line_to(cr, xCord + track, yCord);                            
+                cairo_move_to(cr, xCord + trackWidth, yCord + trackHeigth);
+                cairo_line_to(cr, xCord + trackWidth, yCord);                            
                 break;
             case B_LOWER:
-                cairo_move_to(cr, xCord + track, yCord + track);
-                cairo_line_to(cr, xCord + track, yCord + cellHeight);        
+                cairo_move_to(cr, xCord + trackWidth, yCord + trackHeigth);
+                cairo_line_to(cr, xCord + trackWidth, yCord + cellHeight);        
                 break;
             case B_RIGHT:                                
-                cairo_move_to(cr, xCord + track, yCord + track);
-                cairo_line_to(cr, xCord + cellWidth, yCord + track);   
+                cairo_move_to(cr, xCord + trackWidth, yCord + trackHeigth);
+                cairo_line_to(cr, xCord + cellWidth, yCord + trackHeigth);   
                 break;
             case B_LEFT:
-                cairo_move_to(cr, xCord + track, yCord + track);
-                cairo_line_to(cr, xCord, yCord + track);                       
+                cairo_move_to(cr, xCord + trackWidth, yCord + trackHeigth);
+                cairo_line_to(cr, xCord, yCord + trackHeigth);                       
                 break;
         }    
                     
@@ -1099,13 +1101,23 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
     
     //Draw Solutions
     //TODO draw each solution with a different color
+    cairo_set_source_rgb(cr, 0.0, 0.0, 1.0);
+    if(randomMouseEnable) drawSolution(cr, &randomMouseSolution, cellWidth, cellHeight, width, height, padding, 1);
+    cairo_stroke(cr);
     cairo_set_source_rgb(cr, 0.0, 1.0, 0.0);
-    if(randomMouseEnable) drawSolution(cr, &randomMouseSolution, cellWidth, cellHeight, width, height, padding);
-    if(leftHandEnable) drawSolution(cr, &leftHandSolution, cellWidth, cellHeight, width, height, padding);
-    if(rightHandEnable) drawSolution(cr, &rightHandSolution, cellWidth, cellHeight, width, height, padding);
-    if(pledgeEnable) drawSolution(cr, &pledgeSolution, cellWidth, cellHeight, width, height, padding);
-    if(tremauxEnable) drawSolution(cr, &tremauxSolution, cellWidth, cellHeight, width, height, padding);
-    if(fattahEnable) drawSolution(cr, &fattahSolution, cellWidth, cellHeight, width, height, padding);
+    if(leftHandEnable) drawSolution(cr, &leftHandSolution, cellWidth, cellHeight, width, height, padding, 2);
+    cairo_stroke(cr);
+    cairo_set_source_rgb(cr, 0.0, 1.0, 1.0);
+    if(rightHandEnable) drawSolution(cr, &rightHandSolution, cellWidth, cellHeight, width, height, padding, 3);
+    cairo_stroke(cr);
+    cairo_set_source_rgb(cr, 1.0, 0.0, 0.0);
+    if(pledgeEnable) drawSolution(cr, &pledgeSolution, cellWidth, cellHeight, width, height, padding, 4);
+    cairo_stroke(cr);
+    cairo_set_source_rgb(cr, 1.0, 0.0, 1.0);
+    if(tremauxEnable) drawSolution(cr, &tremauxSolution, cellWidth, cellHeight, width, height, padding, 5);
+    cairo_stroke(cr);
+    cairo_set_source_rgb(cr, 1.0, 1.0, 0.0);
+    if(fattahEnable) drawSolution(cr, &fattahSolution, cellWidth, cellHeight, width, height, padding, 6);
 
     cairo_stroke(cr);
 
@@ -1311,11 +1323,11 @@ void solveButton(__attribute__((unused)) GtkWidget *widget,
 
     //Test -- 
     randomMouseEnable = false;
-    leftHandEnable = false;
-    rightHandEnable = false;
-    pledgeEnable = false;
+    leftHandEnable = true;
+    rightHandEnable = true;
+    pledgeEnable = true;
     tremauxEnable = true;
-    fattahEnable = false;
+    fattahEnable = true;
     // -- 
 
     if(randomMouseEnable) freeList(&randomMouseSolution);
