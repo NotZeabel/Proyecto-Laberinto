@@ -1345,24 +1345,52 @@ void generateButton(__attribute__((unused)) GtkWidget *widget,
 void solveButton(__attribute__((unused)) GtkWidget *widget, 
                        __attribute__((unused)) gpointer   data){
 
+    GtkWidget  *dialog;
+    GtkBuilder *builder;
+
+    g_return_if_fail (window != NULL);
+
+    builder = gtk_builder_new_from_file("solveDialog.glade");
+
+    dialog = GTK_WIDGET(gtk_builder_get_object (builder, "solveDialog"));
+    gtk_window_set_transient_for (GTK_WINDOW(dialog), GTK_WINDOW(window));
+
+    gtk_widget_show_all(dialog);
+
+    int response = gtk_dialog_run(GTK_DIALOG(dialog));
+
+    if(response == 1) {
+        if(randomMouseEnable || leftHandEnable || rightHandEnable || pledgeEnable || tremauxEnable || fattahEnable){
+            if(randomMouseEnable) freeList(&randomMouseSolution);
+            if(leftHandEnable) freeList(&leftHandSolution);
+            if(rightHandEnable) freeList(&rightHandSolution);
+            if(pledgeEnable) freeList(&pledgeSolution);
+            if(tremauxEnable) freeList(&tremauxSolution);
+            if(fattahEnable) freeList(&fattahSolution);
+            gtk_widget_set_sensitive(executeWidget, TRUE);
+        } else {
+            GtkWidget *dialogWindow;
+            const gchar *message = "Error. No algorithm selected.";    
+            dialogWindow = gtk_message_dialog_new(GTK_WINDOW(window), GTK_DIALOG_MODAL, GTK_MESSAGE_ERROR, GTK_BUTTONS_OK, "%s", message);
+            gtk_dialog_run(GTK_DIALOG(dialogWindow));
+            gtk_widget_destroy(dialogWindow);
+            gtk_widget_set_sensitive(executeWidget, FALSE);
+        }
+    }
     ///Claen active solutions
-    if(randomMouseEnable) freeList(&randomMouseSolution);
-    if(leftHandEnable) freeList(&leftHandSolution);
-    if(rightHandEnable) freeList(&rightHandSolution);
-    if(pledgeEnable) freeList(&pledgeSolution);
-    if(tremauxEnable) freeList(&tremauxSolution);
-    if(fattahEnable) freeList(&fattahSolution);
+    
 
-    //Test -- 
-    randomMouseEnable = false;
-    leftHandEnable = true;
-    rightHandEnable = true;
-    pledgeEnable = true;
-    tremauxEnable = true;
-    fattahEnable = true;
-    // -- 
+    // //Test -- 
+    // randomMouseEnable = false;
+    // leftHandEnable = true;
+    // rightHandEnable = true;
+    // pledgeEnable = true;
+    // tremauxEnable = true;
+    // fattahEnable = true;
+    // // -- 
 
-    gtk_widget_set_sensitive(executeWidget, TRUE);    
+    gtk_widget_destroy(dialog);
+    g_object_unref(G_OBJECT(builder));
     return;    
 }
 
