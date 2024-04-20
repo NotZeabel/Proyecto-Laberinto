@@ -163,6 +163,15 @@ void freeList(struct node* list){
     list->next = NULL;
 }
 
+void resetSolutions() {
+    freeList(&randomMouseSolution);
+    freeList(&leftHandSolution);
+    freeList(&rightHandSolution);
+    freeList(&pledgeSolution);
+    freeList(&tremauxSolution);
+    freeList(&fattahSolution);
+}
+
 void freeMemory(){
     freeLabyrinth(&lab);
     if(randomMouseEnable) freeList(&randomMouseSolution);
@@ -1208,6 +1217,10 @@ void enableSave() {
     gtk_widget_set_sensitive(saveWidget, TRUE);
 }
 
+void enableSolve(){
+    gtk_widget_set_sensitive(solveWidget, TRUE);
+}
+
 void disableLowerButtons(){
     gtk_widget_set_sensitive(executeWidget, FALSE);
     gtk_widget_set_sensitive(stopWidget, FALSE);
@@ -1294,6 +1307,7 @@ void loadFile(char* path){
     disableSolutions();
     disableLowerButtons();
     enableSave();
+    enableSolve();
     fclose(file);   
 }
 
@@ -1338,7 +1352,9 @@ void generateButton(__attribute__((unused)) GtkWidget *widget,
             generateLabyrinth(&lab);    
             disableSolutions();
             disableLowerButtons();
+            resetSolutions();
             enableSave();
+            enableSolve();
         }else{
             GtkWidget *dialogWindow;
             const gchar *message = "Error. Input must be a number between 0 and 2048.";    
