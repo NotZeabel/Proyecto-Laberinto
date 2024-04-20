@@ -1,31 +1,33 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.40.0 -->
+<!-- Generated with glade 3.38.2 -->
 <interface>
   <requires lib="gtk+" version="3.24"/>
   <object class="GtkImage" id="imageExit">
     <property name="visible">True</property>
     <property name="can-focus">False</property>
-    <property name="pixbuf">Icons/exit.svg</property>
+    <property name="pixbuf">Icons/exit_small.svg</property>
   </object>
   <object class="GtkImage" id="imageGears">
     <property name="visible">True</property>
     <property name="can-focus">False</property>
-    <property name="pixbuf">Icons/gears.svg</property>
+    <property name="halign">center</property>
+    <property name="valign">center</property>
+    <property name="pixbuf">Icons/gears_small.svg</property>
   </object>
   <object class="GtkImage" id="imageOpen">
     <property name="visible">True</property>
     <property name="can-focus">False</property>
-    <property name="pixbuf">Icons/open.svg</property>
+    <property name="pixbuf">Icons/open_small.svg</property>
   </object>
   <object class="GtkImage" id="imageSave">
     <property name="visible">True</property>
     <property name="can-focus">False</property>
-    <property name="pixbuf">Icons/save.svg</property>
+    <property name="pixbuf">Icons/save_small.svg</property>
   </object>
   <object class="GtkImage" id="imageSolve">
     <property name="visible">True</property>
     <property name="can-focus">False</property>
-    <property name="pixbuf">Icons/solve.svg</property>
+    <property name="pixbuf">Icons/solve_small.svg</property>
   </object>
   <object class="GtkWindow" id="window">
     <property name="can-focus">False</property>
@@ -135,14 +137,14 @@
             </child>
           </object>
           <packing>
-            <property name="x">763</property>
+            <property name="x">607</property>
             <property name="y">7</property>
           </packing>
         </child>
         <child>
           <object class="GtkDrawingArea" id="labyrinthDrawingArea">
-            <property name="width-request">750</property>
-            <property name="height-request">750</property>
+            <property name="width-request">600</property>
+            <property name="height-request">600</property>
             <property name="visible">True</property>
             <property name="can-focus">False</property>
             <signal name="button-press-event" handler="buttonPressed" swapped="no"/>
@@ -204,7 +206,7 @@
             </child>
           </object>
           <packing>
-            <property name="y">753</property>
+            <property name="y">606</property>
           </packing>
         </child>
       </object>

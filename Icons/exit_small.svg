@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<svg width="80" height="80" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg" data-name="Layer 1">
+ <title>Artboard 12</title>
+
+ <g class="layer">
+  <title>Layer 1</title>
+  <g id="svg_5">
+   <title>Layer 1</title>
+   <path class="cls-1" d="m41.49,61.86c0,3.7 -2.21,6.65 -4.91,6.65l-22.47,0c-2.69,0 -4.91,-2.98 -4.91,-6.65l0,-43.71c0,-3.7 2.21,-6.65 4.91,-6.65l22.47,0c2.69,0 4.91,2.98 4.91,6.65" fill="none" id="svg_1" stroke="#000" stroke-linecap="square" stroke-miterlimit="10" stroke-width="5px"/>
+   <line class="cls-1" fill="none" id="svg_2" stroke="#000" stroke-linecap="square" stroke-miterlimit="10" stroke-width="5px" x1="28.89" x2="68.05" y1="40" y2="40"/>
+   <line class="cls-1" fill="none" id="svg_3" stroke="#000" stroke-linecap="square" stroke-miterlimit="10" stroke-width="5px" x1="55.48" x2="70.8" y1="24.68" y2="40"/>
+   <line class="cls-1" fill="none" id="svg_4" stroke="#000" stroke-linecap="square" stroke-miterlimit="10" stroke-width="5px" x1="55.48" x2="70.8" y1="55.32" y2="40"/>
+  </g>
+ </g>
+</svg>
