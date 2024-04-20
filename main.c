@@ -9,12 +9,12 @@
 
 //UI 
 GtkWidget* window;
-GtkWidget* saveWidget;
+GtkWidget *saveWidget, *generateWidget, *solveWidget, *loadWidget, *exitWidget;
 GtkWidget *drawArea;
 double zoom;
 gboolean dragging = FALSE;
 gdouble initialX, initialY, previousX, previousY, offsetX, offsetY = 0;
-bool solving = FALSE;
+bool drawingAnimation = FALSE;
 int sleepTime = 700000;
 
 
@@ -457,10 +457,11 @@ void solveRandomMouse(struct maze* lab, struct node* solutionList){
         currentDir = dir;
 
         //Draw current solution
-        if(!solving) return;
-        gtk_widget_queue_draw(drawArea);
-        while(gtk_events_pending()) gtk_main_iteration();
-        usleep(sleepTime);        
+        if(drawingAnimation){
+            gtk_widget_queue_draw(drawArea);
+            while(gtk_events_pending()) gtk_main_iteration();
+            usleep(sleepTime);     
+        }   
     }
     lab->matrix[0][0].barrier = lab->matrix[0][0].barrier | B_LEFT; //Remove wall in entrance
 }
@@ -491,10 +492,11 @@ void solveLeftHand(struct maze* lab, struct node* solutionList){
         currentDir = dir;    
 
         //Draw current solution
-        if(!solving) return;
-        gtk_widget_queue_draw(drawArea);
-        while(gtk_events_pending()) gtk_main_iteration();
-        usleep(sleepTime);                    
+        if(drawingAnimation){
+            gtk_widget_queue_draw(drawArea);
+            while(gtk_events_pending()) gtk_main_iteration();
+            usleep(sleepTime);     
+        }          
     }    
 }
 
@@ -524,10 +526,11 @@ void solveRightHand(struct maze* lab, struct node* solutionList){
         currentDir = dir;     
 
         //Draw current solution
-        if(!solving) return;
-        gtk_widget_queue_draw(drawArea);
-        while(gtk_events_pending()) gtk_main_iteration();
-        usleep(sleepTime);                   
+        if(drawingAnimation){
+            gtk_widget_queue_draw(drawArea);
+            while(gtk_events_pending()) gtk_main_iteration();
+            usleep(sleepTime);     
+        }         
     }    
 }
 
@@ -576,10 +579,11 @@ void solvePledge(struct maze* lab, struct node* solutionList){
         currentDir = dir;       
         
         //Draw current solution
-        if(!solving) return;
-        gtk_widget_queue_draw(drawArea);
-        while(gtk_events_pending()) gtk_main_iteration();
-        usleep(sleepTime);        
+        if(drawingAnimation){
+            gtk_widget_queue_draw(drawArea);
+            while(gtk_events_pending()) gtk_main_iteration();
+            usleep(sleepTime);     
+        }      
     }    
     lab->matrix[0][0].barrier = lab->matrix[0][0].barrier | B_LEFT; //Remove wall in entrance
 }
@@ -729,10 +733,11 @@ void pickBestEntrance(struct maze* lab, struct pos* currentPos) {
 }
 
 void drawPartialSolution() {
-    if(!solving) return;
-    gtk_widget_queue_draw(drawArea);
-    while(gtk_events_pending()) gtk_main_iteration();
-    usleep(sleepTime); 
+    if(drawingAnimation){
+        gtk_widget_queue_draw(drawArea);
+        while(gtk_events_pending()) gtk_main_iteration();
+        usleep(sleepTime);     
+    }
 }
 
 //TREMAUX
@@ -1198,6 +1203,22 @@ void enableSave() {
     gtk_widget_set_sensitive(saveWidget, TRUE);
 }
 
+
+void enableButtons(){
+    gtk_widget_set_sensitive(saveWidget, TRUE);
+    gtk_widget_set_sensitive(loadWidget, TRUE);
+    gtk_widget_set_sensitive(generateWidget, TRUE);
+    gtk_widget_set_sensitive(exitWidget, TRUE);
+}
+
+//disables all the buttons that may cause problems while the maze is being solve
+void disableButtons(){
+    gtk_widget_set_sensitive(saveWidget, FALSE);
+    gtk_widget_set_sensitive(loadWidget, FALSE);
+    gtk_widget_set_sensitive(generateWidget, FALSE);
+    gtk_widget_set_sensitive(exitWidget, FALSE);
+} 
+
 void saveFile(char* path){
     FILE* file;
 
@@ -1278,7 +1299,6 @@ void generateButton(__attribute__((unused)) GtkWidget *widget,
     GtkWidget  *colsInput;
     GtkBuilder *builder;
 
-    solving=false;
     g_return_if_fail (window != NULL);
 
     builder = gtk_builder_new_from_file("inputDialog.glade");
@@ -1319,8 +1339,9 @@ void generateButton(__attribute__((unused)) GtkWidget *widget,
 
 void solveButton(__attribute__((unused)) GtkWidget *widget, 
                        __attribute__((unused)) gpointer   data){
-    if(solving){ solving = false; return;}  
+    if(drawingAnimation){ drawingAnimation = false; return;}  
 
+    disableButtons();
     //Test -- 
     randomMouseEnable = false;
     leftHandEnable = true;
@@ -1338,16 +1359,17 @@ void solveButton(__attribute__((unused)) GtkWidget *widget,
     if(fattahEnable) freeList(&fattahSolution);
 
     sleepTime = 7000000/(lab.rows * lab.cols);
-    solving = TRUE;
+    drawingAnimation = TRUE;
     if(randomMouseEnable) solveRandomMouse(&lab, &randomMouseSolution);
     if(leftHandEnable) solveLeftHand(&lab, &leftHandSolution);
     if(rightHandEnable) solveRightHand(&lab, &rightHandSolution);
     if(pledgeEnable) solvePledge(&lab, &pledgeSolution);
     if(tremauxEnable) solveTremaux(&lab, &tremauxSolution);
     if(fattahEnable) solveFattah(&lab, &fattahSolution);
-    solving=FALSE;
+    drawingAnimation=FALSE;
     //printSolution(&randomMouseSolution);        
     gtk_widget_queue_draw(drawArea);
+    enableButtons();
 
     return;
     
@@ -1412,7 +1434,6 @@ void loadButton(GtkWidget *widget, __attribute__((unused)) gpointer   data) {
     GtkFileFilter *filter;
     gint res;
     
-    solving=false;
     dialog = gtk_file_chooser_dialog_new ("Open File",
                                         GTK_WINDOW(window),
                                         action,
@@ -1442,14 +1463,12 @@ void loadButton(GtkWidget *widget, __attribute__((unused)) gpointer   data) {
 
 void exitButton(__attribute__((unused)) GtkWidget *widget, 
                        __attribute__((unused)) gpointer   data){
-        solving=FALSE;
         gtk_main_quit();
 }
   
 gboolean windowDelete(__attribute__((unused)) GtkWidget *widget, 
                       __attribute__((unused)) GdkEvent  *event,
                       __attribute__((unused)) gpointer   data){
-    solving=FALSE;
     gtk_main_quit();    
     return FALSE;
 }
@@ -1477,6 +1496,10 @@ int main(int argc, char **argv)
     
     window  = GTK_WIDGET (gtk_builder_get_object (builder,"window"));
     saveWidget  = GTK_WIDGET (gtk_builder_get_object (builder,"saveButton"));
+    generateWidget  = GTK_WIDGET (gtk_builder_get_object (builder,"generateButton"));
+    solveWidget  = GTK_WIDGET (gtk_builder_get_object (builder,"solveButton"));
+    loadWidget  = GTK_WIDGET (gtk_builder_get_object (builder,"loadButton"));
+    exitWidget  = GTK_WIDGET (gtk_builder_get_object (builder,"exitButton"));
     gtk_builder_connect_signals (builder, NULL);
 
     drawArea = GTK_WIDGET(gtk_builder_get_object(builder, "labyrinthDrawingArea"));
