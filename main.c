@@ -1342,6 +1342,72 @@ void generateButton(__attribute__((unused)) GtkWidget *widget,
     g_object_unref(G_OBJECT(builder));
 }
 
+void randomSet(GtkWidget *widget, gpointer user_data){
+    printf("Random Mouse\n");
+    if (randomMouseEnable) {
+        gtk_widget_set_opacity(GTK_WIDGET(user_data), 1.0);
+        randomMouseEnable = false;
+    } else {
+        gtk_widget_set_opacity(GTK_WIDGET(user_data), 0.5);
+        randomMouseEnable = true;
+    }
+}
+
+void leftHandSet(GtkWidget *widget, gpointer user_data){
+    printf("Left Hand\n");
+    if (leftHandEnable) {
+        gtk_widget_set_opacity(GTK_WIDGET(user_data), 1.0);
+        leftHandEnable = false;
+    } else {
+        gtk_widget_set_opacity(GTK_WIDGET(user_data), 0.5);
+        leftHandEnable = true;
+    }
+}
+
+void rightHandSet(GtkWidget *widget, gpointer user_data) {
+    printf("Right Hand\n");
+    if (rightHandEnable) {
+        gtk_widget_set_opacity(GTK_WIDGET(user_data), 1.0);
+        rightHandEnable = false;
+    } else {
+        gtk_widget_set_opacity(GTK_WIDGET(user_data), 0.5);
+        rightHandEnable = true;
+    }
+}
+
+void pledgeSet(GtkWidget *widget, gpointer user_data) {
+    printf("Pledge\n");
+    if (pledgeEnable) {
+        gtk_widget_set_opacity(GTK_WIDGET(user_data), 1.0);
+        pledgeEnable = false;
+    } else {
+        gtk_widget_set_opacity(GTK_WIDGET(user_data), 0.5);
+        pledgeEnable = true;
+    }
+}
+
+void tremauxSet(GtkWidget *widget, gpointer user_data) {
+    printf("Tremaux\n");
+    if (tremauxEnable) {
+        gtk_widget_set_opacity(GTK_WIDGET(user_data), 1.0);
+        tremauxEnable = false;
+    } else {
+        gtk_widget_set_opacity(GTK_WIDGET(user_data), 0.5);
+        tremauxEnable = true;
+    }
+}
+
+void fattahSet(GtkWidget *widget, gpointer user_data) {
+    printf("Fattah\n");
+    if (fattahEnable) {
+        gtk_widget_set_opacity(GTK_WIDGET(user_data), 1.0);
+        fattahEnable = false;
+    } else {
+        gtk_widget_set_opacity(GTK_WIDGET(user_data), 0.5);
+        fattahEnable = true;
+    }
+}
+
 void solveButton(__attribute__((unused)) GtkWidget *widget, 
                        __attribute__((unused)) gpointer   data){
 
@@ -1356,11 +1422,22 @@ void solveButton(__attribute__((unused)) GtkWidget *widget,
 
     dialog = GTK_WIDGET(gtk_builder_get_object (builder, "solveDialog"));
     gtk_window_set_transient_for (GTK_WINDOW(dialog), GTK_WINDOW(window));
+    GtkWidget *randomButton = GTK_WIDGET(gtk_builder_get_object (builder, "randomMouseButton"));
+    g_signal_connect(randomButton, "clicked", G_CALLBACK(randomSet), randomButton);
+    GtkWidget *leftButton = GTK_WIDGET(gtk_builder_get_object (builder, "leftHandButton"));
+    g_signal_connect(leftButton, "clicked", G_CALLBACK(leftHandSet), leftButton);
+    GtkWidget *rightButton = GTK_WIDGET(gtk_builder_get_object (builder, "rightHandButton"));
+    g_signal_connect(rightButton, "clicked", G_CALLBACK(rightHandSet), rightButton);
+    GtkWidget *pledgeButton = GTK_WIDGET(gtk_builder_get_object (builder, "pledgeButton"));
+    g_signal_connect(pledgeButton, "clicked", G_CALLBACK(pledgeSet), pledgeButton);
+    GtkWidget *tremauxButton = GTK_WIDGET(gtk_builder_get_object (builder, "tremauxButton"));
+    g_signal_connect(tremauxButton, "clicked", G_CALLBACK(tremauxSet), tremauxButton);
+    GtkWidget *fattahButton = GTK_WIDGET(gtk_builder_get_object (builder, "fattahButton"));
+    g_signal_connect(fattahButton, "clicked", G_CALLBACK(fattahSet), fattahButton);
 
     gtk_widget_show_all(dialog);
 
     int response = gtk_dialog_run(GTK_DIALOG(dialog));
-
     if(response == 1) {
         if(randomMouseEnable || leftHandEnable || rightHandEnable || pledgeEnable || tremauxEnable || fattahEnable){
             gtk_widget_set_sensitive(executeWidget, TRUE);
@@ -1372,6 +1449,8 @@ void solveButton(__attribute__((unused)) GtkWidget *widget,
             gtk_widget_destroy(dialogWindow);
             gtk_widget_set_sensitive(executeWidget, FALSE);
         }
+    } else {
+        gtk_widget_set_sensitive(executeWidget, FALSE);
     }
     ///Claen active solutions
     
