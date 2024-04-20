@@ -85,6 +85,7 @@
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
                     <property name="receives-default">True</property>
+                    <property name="opacity">0.5</property>
                     <signal name="clicked" handler="randomMouseSet" swapped="no"/>
                   </object>
                   <packing>
@@ -98,6 +99,7 @@
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
                     <property name="receives-default">True</property>
+                    <property name="opacity">0.5</property>
                     <signal name="clicked" handler="leftHandSet" swapped="no"/>
                   </object>
                   <packing>
@@ -111,6 +113,7 @@
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
                     <property name="receives-default">True</property>
+                    <property name="opacity">0.5</property>
                     <signal name="clicked" handler="rightHandSet" swapped="no"/>
                   </object>
                   <packing>
@@ -124,6 +127,7 @@
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
                     <property name="receives-default">True</property>
+                    <property name="opacity">0.5</property>
                     <signal name="clicked" handler="pledgeSet" swapped="no"/>
                   </object>
                   <packing>
@@ -137,6 +141,7 @@
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
                     <property name="receives-default">True</property>
+                    <property name="opacity">0.5</property>
                     <signal name="clicked" handler="tremauxSet" swapped="no"/>
                   </object>
                   <packing>
@@ -150,6 +155,7 @@
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
                     <property name="receives-default">True</property>
+                    <property name="opacity">0.5</property>
                     <signal name="clicked" handler="fattahSet" swapped="no"/>
                   </object>
                   <packing>

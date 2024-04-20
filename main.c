@@ -422,6 +422,15 @@ void disableSolutions(){
     fattahEnable = false;
 }
 
+void enableSolutions(){
+    randomMouseEnable = true;
+    leftHandEnable = true;
+    rightHandEnable = true;
+    pledgeEnable = true;
+    tremauxEnable = true;
+    fattahEnable = true;
+}
+
 void drawPartialSolution() {
     if(drawingAnimation){
         gtk_widget_queue_draw(drawArea);
@@ -1411,7 +1420,7 @@ void solveButton(__attribute__((unused)) GtkWidget *widget,
 
     g_return_if_fail (window != NULL);
 
-    disableSolutions();
+    enableSolutions();
 
     builder = gtk_builder_new_from_file("solveDialog.glade");
 
