@@ -1749,12 +1749,14 @@ void loadButton(GtkWidget *widget, __attribute__((unused)) gpointer   data) {
 
 void exitButton(__attribute__((unused)) GtkWidget *widget, 
                        __attribute__((unused)) gpointer   data){
+        solving=false;
         gtk_main_quit();
 }
   
 gboolean windowDelete(__attribute__((unused)) GtkWidget *widget, 
                       __attribute__((unused)) GdkEvent  *event,
                       __attribute__((unused)) gpointer   data){
+    solving=false;
     gtk_main_quit();    
     return FALSE;
 }
