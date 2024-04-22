@@ -19,6 +19,13 @@ bool drawingAnimation = FALSE;
 bool solving = FALSE;
 int sleepTime = 700000;
 
+int randomVisited = 0;
+int leftHandVisited = 0;
+int rightHandVisited = 0;
+int pledgeVisited = 0;
+int tremauxVisited = 0;
+int fattahVisited = 0;
+
 
 
 //Maze
@@ -170,6 +177,13 @@ void resetSolutions() {
     freeList(&pledgeSolution);
     freeList(&tremauxSolution);
     freeList(&fattahSolution);
+
+    randomVisited = 0;
+    leftHandVisited = 0;
+    rightHandVisited = 0; 
+    pledgeVisited = 0;
+    tremauxVisited = 0;
+    fattahVisited = 0;    
 }
 
 void freeMemory(){
@@ -1025,10 +1039,22 @@ void drawSolution(cairo_t *cr, struct node* list, int cellWidth, int cellHeight,
                     
         lastDir = nextDir;
         currentNode = currentNode->next;                    
-    }       
+    }
+    cairo_stroke(cr);
 }
 
+void drawText(cairo_t *cr, int x, int y, char* text){    
+    cairo_select_font_face(cr, "Arial",
+        CAIRO_FONT_SLANT_NORMAL,
+        CAIRO_FONT_WEIGHT_BOLD);
 
+    cairo_set_font_size(cr, 14);
+
+    cairo_move_to(cr, x, y);
+    cairo_show_text(cr, text);
+    
+    cairo_stroke(cr);
+}
 
 
 
@@ -1042,10 +1068,12 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
     width = gtk_widget_get_allocated_width (widget);
     height = gtk_widget_get_allocated_height (widget);
 
-    
+    height -= 100;
+
+
     // Make background a solid black color
     cairo_set_source_rgba (cr, 0.0, 0.0, 0.0, 1.0);
-    cairo_rectangle(cr,0,0,width,height);
+    cairo_rectangle(cr,0,0,width,height+100);
     cairo_fill(cr);
     
     // Add white border
@@ -1090,7 +1118,7 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
             
             //if cell is out of the view it is not rendered
             if((xCord<0 && xCord+cellWidth<0)  || (xCord>width && xCord+cellWidth>width) ||
-                (yCord<0 && yCord+cellHeight<0) || (yCord>height && yCord+cellHeight>height)){
+                (yCord<0 && yCord+cellHeight<0) || (yCord+cellHeight>height)){
                 continue;
             }
 
@@ -1119,26 +1147,45 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
     //if(cellWidth<7 || cellHeight<7) return FALSE; 
     
     //Draw Solutions
-    //TODO draw each solution with a different color
-    cairo_set_source_rgb(cr, 0.0, 0.0, 1.0);
-    if(randomMouseEnable) drawSolution(cr, &randomMouseSolution, cellWidth, cellHeight, width, height, padding, 1);
-    cairo_stroke(cr);
-    cairo_set_source_rgb(cr, 0.0, 1.0, 0.0);
-    if(leftHandEnable) drawSolution(cr, &leftHandSolution, cellWidth, cellHeight, width, height, padding, 2);
-    cairo_stroke(cr);
-    cairo_set_source_rgb(cr, 0.0, 1.0, 1.0);
-    if(rightHandEnable) drawSolution(cr, &rightHandSolution, cellWidth, cellHeight, width, height, padding, 3);
-    cairo_stroke(cr);
-    cairo_set_source_rgb(cr, 1.0, 0.0, 0.0);
-    if(pledgeEnable) drawSolution(cr, &pledgeSolution, cellWidth, cellHeight, width, height, padding, 4);
-    cairo_stroke(cr);
-    cairo_set_source_rgb(cr, 1.0, 0.0, 1.0);
-    if(tremauxEnable) drawSolution(cr, &tremauxSolution, cellWidth, cellHeight, width, height, padding, 5);
-    cairo_stroke(cr);
-    cairo_set_source_rgb(cr, 1.0, 1.0, 0.0);
-    if(fattahEnable) drawSolution(cr, &fattahSolution, cellWidth, cellHeight, width, height, padding, 6);
+    
+    int xText = 0;
 
+    cairo_set_source_rgb(cr, 0.0, 0.0, 1.0);
+    if(randomMouseEnable){
+        drawSolution(cr, &randomMouseSolution, cellWidth, cellHeight, width, height, padding, 1);         
+        char nodes[10];    
+        itoa(randomVisited, nodes, 10);
+        char text[20];
+        strcpy(text, "randomMouse: ");
+        strcpy(text, nodes);
+        drawText(cr, xText, height+20, text);   
+    }
+    cairo_set_source_rgb(cr, 0.0, 1.0, 0.0);
+    if(leftHandEnable){
+        drawSolution(cr, &leftHandSolution, cellWidth, cellHeight, width, height, padding, 2);    
+    } 
+    cairo_set_source_rgb(cr, 0.0, 1.0, 1.0);
+    if(rightHandEnable){
+        drawSolution(cr, &rightHandSolution, cellWidth, cellHeight, width, height, padding, 3);    
+    }
+    cairo_set_source_rgb(cr, 1.0, 0.0, 0.0);
+    if(pledgeEnable){
+        drawSolution(cr, &pledgeSolution, cellWidth, cellHeight, width, height, padding, 4);      
+    } 
+    cairo_set_source_rgb(cr, 1.0, 0.0, 1.0);
+    if(tremauxEnable){
+        drawSolution(cr, &tremauxSolution, cellWidth, cellHeight, width, height, padding, 5);    
+    }
+    cairo_set_source_rgb(cr, 1.0, 1.0, 0.0);
+    if(fattahEnable){
+        drawSolution(cr, &fattahSolution, cellWidth, cellHeight, width, height, padding, 6);
+    }
     cairo_stroke(cr);
+
+    //Draw Nodes
+
+
+    
 
     return FALSE;
 }
