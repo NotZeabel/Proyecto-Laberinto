@@ -1004,6 +1004,21 @@ void drawSolution(cairo_t *cr, struct node* list, int cellWidth, int cellHeight,
             continue;
         }            
 
+        //Gets next direction, checks if its last node
+        char nextDir;
+        if(currentNode->next != NULL){                
+            nextDir = getDirectionFromPos(currentNode->position, currentNode->next->position);    
+        }else{
+            if(currentNode->position.row == lab.rows-1 && currentNode->position.col == lab.cols-1){
+                nextDir = B_RIGHT;
+            }else{
+                nextDir = lastDir;
+                cairo_stroke(cr);
+                //cairo_set_source_rgb(cr, 1, 1, 1);
+                cairo_set_line_width(cr, 3);                
+            }
+        }
+
         //Draw Line
         //Cairo Lineto is in all cases, simplify 
         switch (lastDir){
@@ -1024,16 +1039,11 @@ void drawSolution(cairo_t *cr, struct node* list, int cellWidth, int cellHeight,
                 cairo_line_to(cr, xCord + trackWidth, yCord + trackHeigth);                       
                 break;
         }    
-                    
-        char nextDir = B_RIGHT;
 
-        if(currentNode->next != NULL){                
-            nextDir = getDirectionFromPos(currentNode->position, currentNode->next->position);    
-        }
-
-        if(nextDir == oppositeDirection(lastDir)){
-            //track +=1;  going back, doesnt work.
-        }
+        //not implemented yet, and probably never                            
+        // if(nextDir == oppositeDirection(lastDir)){
+        //     //track +=1;  going back, doesnt work.
+        // }                 
 
         switch (nextDir){
             case B_UPPER:
@@ -1058,6 +1068,7 @@ void drawSolution(cairo_t *cr, struct node* list, int cellWidth, int cellHeight,
         currentNode = currentNode->next;                    
     }
     cairo_stroke(cr);
+    cairo_set_line_width(cr, 1);
 }
 
 void drawText(cairo_t *cr, int x, int y, char* text){    
@@ -1170,8 +1181,7 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
     int yIndex = 0;
 
     cairo_set_source_rgb(cr, 0.0, 0.0, 1.0);
-    if(randomMouseEnable){
-        drawSolution(cr, &randomMouseSolution, cellWidth, cellHeight, width, height, padding, 1);         
+    if(randomMouseEnable){                 
         char nodes[10];    
         sprintf(nodes, "%d", randomVisited);
         char text[30];
@@ -1180,10 +1190,10 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
         drawText(cr, xText, yText[yIndex], text);
         yIndex = (yIndex+1)%2;        
         if(yIndex==0) xText+=200;   
+        drawSolution(cr, &randomMouseSolution, cellWidth, cellHeight, width, height, padding, 1);
     }
     cairo_set_source_rgb(cr, 0.0, 1.0, 0.0);
-    if(leftHandEnable){
-        drawSolution(cr, &leftHandSolution, cellWidth, cellHeight, width, height, padding, 2);    
+    if(leftHandEnable){        
         char nodes[10];    
         sprintf(nodes, "%d", leftHandVisited);
         char text[30];
@@ -1192,10 +1202,10 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
         drawText(cr, xText, yText[yIndex], text);
         yIndex = (yIndex+1)%2;        
         if(yIndex==0) xText+=200; 
+        drawSolution(cr, &leftHandSolution, cellWidth, cellHeight, width, height, padding, 2);    
     } 
     cairo_set_source_rgb(cr, 0.0, 1.0, 1.0);
-    if(rightHandEnable){
-        drawSolution(cr, &rightHandSolution, cellWidth, cellHeight, width, height, padding, 3);   
+    if(rightHandEnable){        
         char nodes[10];    
         sprintf(nodes, "%d", rightHandVisited);
         char text[30];
@@ -1204,10 +1214,10 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
         drawText(cr, xText, yText[yIndex], text);
         yIndex = (yIndex+1)%2;        
         if(yIndex==0) xText+=200; 
+        drawSolution(cr, &rightHandSolution, cellWidth, cellHeight, width, height, padding, 3);   
     }
     cairo_set_source_rgb(cr, 1.0, 0.0, 0.0);
-    if(pledgeEnable){
-        drawSolution(cr, &pledgeSolution, cellWidth, cellHeight, width, height, padding, 4);
+    if(pledgeEnable){        
         char nodes[10];    
         sprintf(nodes, "%d", pledgeVisited);
         char text[30];
@@ -1216,10 +1226,10 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
         drawText(cr, xText, yText[yIndex], text);
         yIndex = (yIndex+1)%2;        
         if(yIndex==0) xText+=200; 
+        drawSolution(cr, &pledgeSolution, cellWidth, cellHeight, width, height, padding, 4);
     } 
     cairo_set_source_rgb(cr, 1.0, 0.0, 1.0);
-    if(tremauxEnable){
-        drawSolution(cr, &tremauxSolution, cellWidth, cellHeight, width, height, padding, 5); 
+    if(tremauxEnable){         
         char nodes[10];    
         sprintf(nodes, "%d", tremauxVisited);
         char text[30];
@@ -1228,10 +1238,10 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
         drawText(cr, xText, yText[yIndex], text);
         yIndex = (yIndex+1)%2;        
         if(yIndex==0) xText+=200; 
+        drawSolution(cr, &tremauxSolution, cellWidth, cellHeight, width, height, padding, 5);
     }
     cairo_set_source_rgb(cr, 1.0, 1.0, 0.0);
-    if(fattahEnable){
-        drawSolution(cr, &fattahSolution, cellWidth, cellHeight, width, height, padding, 6);
+    if(fattahEnable){        
         char nodes[10];    
         sprintf(nodes, "%d", fattahVisited);
         char text[30];
@@ -1240,6 +1250,7 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
         drawText(cr, xText, yText[yIndex], text);
         yIndex = (yIndex+1)%2;        
         if(yIndex==0) xText+=200; 
+        drawSolution(cr, &fattahSolution, cellWidth, cellHeight, width, height, padding, 6);
     }
     cairo_stroke(cr);
 
