@@ -463,8 +463,7 @@ void enableSolutions(){
 
 void drawPartialSolution() {
     if(drawingAnimation){
-        gtk_widget_queue_draw(drawArea);
-        while(gtk_events_pending()) gtk_main_iteration();
+        gtk_widget_queue_draw(drawArea);        
         usleep(sleepTime);     
     }
 }
@@ -511,7 +510,8 @@ void solveRandomMouse(struct maze* lab, struct node* solutionList){
 
         randomVisited++;
         //Draw current solution
-        drawPartialSolution();   
+        drawPartialSolution();
+        while(gtk_events_pending()) gtk_main_iteration();   
         if(!solving)return;
     }
     lab->matrix[0][0].barrier = lab->matrix[0][0].barrier | B_LEFT; //Remove wall in entrance
@@ -543,7 +543,8 @@ void solveLeftHand(struct maze* lab, struct node* solutionList){
         currentDir = dir;    
 
         leftHandVisited++;
-        drawPartialSolution();   
+        drawPartialSolution();
+        while(gtk_events_pending()) gtk_main_iteration();   
         if(!solving)return;       
     }    
 }
@@ -575,6 +576,7 @@ void solveRightHand(struct maze* lab, struct node* solutionList){
 
         rightHandVisited++;
         drawPartialSolution();
+        while(gtk_events_pending()) gtk_main_iteration();
         if(!solving)return;
     }    
 }
@@ -623,7 +625,8 @@ void solvePledge(struct maze* lab, struct node* solutionList){
         currentDir = dir;       
         
         pledgeVisited++;
-        drawPartialSolution();   
+        drawPartialSolution();
+        while(gtk_events_pending()) gtk_main_iteration();   
         if(!solving)return;
     }    
     lab->matrix[0][0].barrier = lab->matrix[0][0].barrier | B_LEFT; //Remove wall in entrance
@@ -801,6 +804,7 @@ void solveTremaux(struct maze* lab, struct node* solutionList) {
             addNode(currentNode, currentPos);
             currentNode = currentNode->next;
             drawPartialSolution();
+            while(gtk_events_pending()) gtk_main_iteration();
             if(!solving)return;
             continue;
         }
@@ -827,6 +831,7 @@ void solveTremaux(struct maze* lab, struct node* solutionList) {
             }
         }
         drawPartialSolution();
+        while(gtk_events_pending()) gtk_main_iteration();
         if(!solving)return;
     }
 
@@ -952,6 +957,7 @@ void solveFattah(struct maze* lab, struct node* solutionList){
         }
 
         drawPartialSolution();
+        while(gtk_events_pending()) gtk_main_iteration();
         if(!solving)return;
     }
 
