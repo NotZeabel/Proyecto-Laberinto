@@ -194,6 +194,13 @@ void freeMemory(){
     if(pledgeEnable) freeList(&pledgeSolution);
     if(tremauxEnable) freeList(&tremauxSolution);
     if(fattahEnable) freeList(&fattahSolution);
+
+    randomVisited = 0;
+    leftHandVisited = 0;
+    rightHandVisited = 0; 
+    pledgeVisited = 0;
+    tremauxVisited = 0;
+    fattahVisited = 0; 
 }
 
 void printLabyrinth(struct maze* lab){
@@ -502,6 +509,7 @@ void solveRandomMouse(struct maze* lab, struct node* solutionList){
         currentPos = currentNode->position;
         currentDir = dir;
 
+        randomVisited++;
         //Draw current solution
         drawPartialSolution();   
         if(!solving)return;
@@ -534,6 +542,7 @@ void solveLeftHand(struct maze* lab, struct node* solutionList){
         currentPos = currentNode->position;    
         currentDir = dir;    
 
+        leftHandVisited++;
         drawPartialSolution();   
         if(!solving)return;       
     }    
@@ -564,6 +573,7 @@ void solveRightHand(struct maze* lab, struct node* solutionList){
         currentPos = currentNode->position;    
         currentDir = dir;     
 
+        rightHandVisited++;
         drawPartialSolution();
         if(!solving)return;
     }    
@@ -612,6 +622,7 @@ void solvePledge(struct maze* lab, struct node* solutionList){
         currentPos = currentNode->position;    
         currentDir = dir;       
         
+        pledgeVisited++;
         drawPartialSolution();   
         if(!solving)return;
     }    
@@ -1048,7 +1059,7 @@ void drawText(cairo_t *cr, int x, int y, char* text){
         CAIRO_FONT_SLANT_NORMAL,
         CAIRO_FONT_WEIGHT_BOLD);
 
-    cairo_set_font_size(cr, 14);
+    cairo_set_font_size(cr, 16);
 
     cairo_move_to(cr, x, y);
     cairo_show_text(cr, text);
@@ -1148,37 +1159,81 @@ gboolean on_drawingarea_draw(GtkWidget *widget, cairo_t *cr, __attribute__((unus
     
     //Draw Solutions
     
-    int xText = 0;
+    int xText = 20; 
+    int yText[] = {height+30, height+80};
+    int yIndex = 0;
 
     cairo_set_source_rgb(cr, 0.0, 0.0, 1.0);
     if(randomMouseEnable){
         drawSolution(cr, &randomMouseSolution, cellWidth, cellHeight, width, height, padding, 1);         
         char nodes[10];    
-        itoa(randomVisited, nodes, 10);
-        char text[20];
-        strcpy(text, "randomMouse: ");
-        strcpy(text, nodes);
-        drawText(cr, xText, height+20, text);   
+        sprintf(nodes, "%d", randomVisited);
+        char text[30];
+        strcpy(text, "Random Mouse: ");
+        strcat(text, nodes);
+        drawText(cr, xText, yText[yIndex], text);
+        yIndex = (yIndex+1)%2;        
+        if(yIndex==0) xText+=200;   
     }
     cairo_set_source_rgb(cr, 0.0, 1.0, 0.0);
     if(leftHandEnable){
         drawSolution(cr, &leftHandSolution, cellWidth, cellHeight, width, height, padding, 2);    
+        char nodes[10];    
+        sprintf(nodes, "%d", leftHandVisited);
+        char text[30];
+        strcpy(text, "Left Hand: ");
+        strcat(text, nodes);
+        drawText(cr, xText, yText[yIndex], text);
+        yIndex = (yIndex+1)%2;        
+        if(yIndex==0) xText+=200; 
     } 
     cairo_set_source_rgb(cr, 0.0, 1.0, 1.0);
     if(rightHandEnable){
-        drawSolution(cr, &rightHandSolution, cellWidth, cellHeight, width, height, padding, 3);    
+        drawSolution(cr, &rightHandSolution, cellWidth, cellHeight, width, height, padding, 3);   
+        char nodes[10];    
+        sprintf(nodes, "%d", rightHandVisited);
+        char text[30];
+        strcpy(text, "Right Hand: ");
+        strcat(text, nodes);
+        drawText(cr, xText, yText[yIndex], text);
+        yIndex = (yIndex+1)%2;        
+        if(yIndex==0) xText+=200; 
     }
     cairo_set_source_rgb(cr, 1.0, 0.0, 0.0);
     if(pledgeEnable){
-        drawSolution(cr, &pledgeSolution, cellWidth, cellHeight, width, height, padding, 4);      
+        drawSolution(cr, &pledgeSolution, cellWidth, cellHeight, width, height, padding, 4);
+        char nodes[10];    
+        sprintf(nodes, "%d", pledgeVisited);
+        char text[30];
+        strcpy(text, "Pledge: ");
+        strcat(text, nodes);
+        drawText(cr, xText, yText[yIndex], text);
+        yIndex = (yIndex+1)%2;        
+        if(yIndex==0) xText+=200; 
     } 
     cairo_set_source_rgb(cr, 1.0, 0.0, 1.0);
     if(tremauxEnable){
-        drawSolution(cr, &tremauxSolution, cellWidth, cellHeight, width, height, padding, 5);    
+        drawSolution(cr, &tremauxSolution, cellWidth, cellHeight, width, height, padding, 5); 
+        char nodes[10];    
+        sprintf(nodes, "%d", tremauxVisited);
+        char text[30];
+        strcpy(text, "Tremaux: ");
+        strcat(text, nodes);
+        drawText(cr, xText, yText[yIndex], text);
+        yIndex = (yIndex+1)%2;        
+        if(yIndex==0) xText+=200; 
     }
     cairo_set_source_rgb(cr, 1.0, 1.0, 0.0);
     if(fattahEnable){
         drawSolution(cr, &fattahSolution, cellWidth, cellHeight, width, height, padding, 6);
+        char nodes[10];    
+        sprintf(nodes, "%d", fattahVisited);
+        char text[30];
+        strcpy(text, "Fattah: ");
+        strcat(text, nodes);
+        drawText(cr, xText, yText[yIndex], text);
+        yIndex = (yIndex+1)%2;        
+        if(yIndex==0) xText+=200; 
     }
     cairo_stroke(cr);
 
