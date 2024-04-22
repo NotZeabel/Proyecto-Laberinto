@@ -803,6 +803,7 @@ void solveTremaux(struct maze* lab, struct node* solutionList) {
             push(s, currentPos);
             addNode(currentNode, currentPos);
             currentNode = currentNode->next;
+            tremauxVisited++;
             drawPartialSolution();
             while(gtk_events_pending()) gtk_main_iteration();
             if(!solving)return;
@@ -817,17 +818,20 @@ void solveTremaux(struct maze* lab, struct node* solutionList) {
                 push(s, currentPos);
                 addNode(currentNode, currentPos);
                 currentNode = currentNode->next;
+                tremauxVisited++;
             } else if (cellType == 1) {
                 lab->matrix[currentPos.row][currentPos.col].visited = F_MARKED;
                 currentPos = popNext(s);
                 addNode(currentNode, currentPos);
                 currentNode = currentNode->next;
+                tremauxVisited++;
             } else {
                 //RULE 3: Choose the best entrance
                 pickBestEntrance(lab, &currentPos);
                 push(s, currentPos);
                 addNode(currentNode, currentPos);
                 currentNode = currentNode->next;
+                tremauxVisited++;
             }
         }
         drawPartialSolution();
@@ -837,8 +841,9 @@ void solveTremaux(struct maze* lab, struct node* solutionList) {
 
     freeStack(s);
     s = NULL;
-    addNode(currentNode, currentPos);
-    currentNode = currentNode->next;
+    // addNode(currentNode, currentPos);
+    // currentNode = currentNode->next;
+    // tremauxVisited++;
 }
 
 //FATTAH AUX
@@ -944,16 +949,19 @@ void solveFattah(struct maze* lab, struct node* solutionList){
             getRandomProductive(lab, bestMD, &currentDir, &currentPos, endPos);
             addNode(currentNode, currentPos);
             currentNode = currentNode->next;
+            fattahVisited++;
             mode = NORMAL;
         } else if(mode == TRAVERSAL_LEFT || mode == TRAVERSAL_RIGHT) {
             currentPos = nextTraversalPath(lab, mode, &currentDir, currentPos);
             addNode(currentNode, currentPos);
             currentNode = currentNode->next;
+            fattahVisited++;
         } else {
             mode = tModes[modeIndex];
             currentPos = nextTraversalPath(lab, mode, &currentDir, currentPos);
             addNode(currentNode, currentPos);
             currentNode = currentNode->next;
+            fattahVisited++;
         }
 
         drawPartialSolution();
