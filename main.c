@@ -1625,7 +1625,13 @@ void executeButton(__attribute__((unused)) GtkWidget *widget,
     if(rightHandEnable) freeList(&rightHandSolution);
     if(pledgeEnable) freeList(&pledgeSolution);
     if(tremauxEnable) freeList(&tremauxSolution);
-    if(fattahEnable) freeList(&fattahSolution);                        
+    if(fattahEnable) freeList(&fattahSolution);
+    if(randomMouseEnable) randomVisited = 0;
+    if(leftHandEnable) rightHandVisited = 0;
+    if(rightHandEnable) leftHandVisited = 0;
+    if(pledgeEnable) pledgeVisited = 0;
+    if(tremauxEnable) tremauxVisited = 0;
+    if(fattahEnable) fattahVisited = 0;                       
                         
     disableSideButtons();
     gtk_widget_set_sensitive(executeWidget, FALSE);
